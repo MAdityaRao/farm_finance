@@ -1,10 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Tailwind handles 99% of styling. 
-   We only add custom animations or font overrides here. */
-
 body {
   font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent; /* Cleaner mobile touch */
 }
 
 /* Smooth fade in for tabs */
@@ -17,18 +15,51 @@ body {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Custom Scrollbar for tables */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Mobile Table Transformation */
+@media (max-width: 640px) {
+  #recordsTable thead {
+    display: none; /* Hide headers on mobile */
+  }
+
+  #recordsTable tr {
+    display: block;
+    background: #1e293b;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+  }
+
+  #recordsTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0 !important;
+    border: none !important;
+    text-align: right;
+  }
+
+  /* Injects labels from data-label attribute */
+  #recordsTable td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    text-align: left;
+  }
+
+  /* Highlight Amount in card */
+  #recordsTable td:nth-last-child(2) {
+    border-top: 1px solid #334155 !important;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem !important;
+    font-size: 1.1rem;
+  }
 }
-::-webkit-scrollbar-track {
-  background: #f1f2f6; 
-}
-::-webkit-scrollbar-thumb {
-  background: #e9ebed; 
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569; 
-}
+
+/* Custom Scrollbar for desktop */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f2f6; }
+::-webkit-scrollbar-thumb { background: #e9ebed; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
