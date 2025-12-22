@@ -2,64 +2,86 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  -webkit-tap-highlight-color: transparent; /* Cleaner mobile touch */
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Smooth fade in for tabs */
+/* Tab Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
-/* Mobile Table Transformation */
+/* Mobile Navigation Active State */
+.nav-btn-mobile.active {
+    color: #10b981; /* Emerald 500 */
+}
+.nav-btn-mobile.inactive {
+    color: #94a3b8; /* Slate 400 */
+}
+
+/* =========================================
+   MOBILE CARD TABLE TRANSFORMATION
+   ========================================= */
 @media (max-width: 640px) {
+  /* Hide standard table headers */
   #recordsTable thead {
-    display: none; /* Hide headers on mobile */
+    display: none;
   }
 
+  /* Make rows act like cards */
   #recordsTable tr {
     display: block;
-    background: #1e293b;
-    margin-bottom: 1rem;
+    background: #1e293b; /* slate-800 */
+    margin-bottom: 0.75rem;
     padding: 1rem;
     border-radius: 0.75rem;
-    border: 1px solid #334155;
+    border: 1px solid #334155; /* slate-700 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 
+  /* Cells become flex rows inside the card */
   #recordsTable td {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0 !important;
+    padding: 0.35rem 0 !important;
     border: none !important;
     text-align: right;
+    font-size: 0.9rem;
+    color: #e2e8f0;
   }
 
-  /* Injects labels from data-label attribute */
+  /* Inject labels using the data-label attribute */
   #recordsTable td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #94a3b8;
+    color: #64748b; /* slate-500 */
     text-transform: uppercase;
     font-size: 0.7rem;
+    letter-spacing: 0.05em;
     text-align: left;
+    margin-right: 1rem;
   }
 
-  /* Highlight Amount in card */
-  #recordsTable td:nth-last-child(2) {
-    border-top: 1px solid #334155 !important;
+  /* Styling specific fields for emphasis */
+  
+  /* Amount Field: Bigger and bold */
+  #recordsTable td[data-label="Amount"] {
     margin-top: 0.5rem;
-    padding-top: 0.75rem !important;
-    font-size: 1.1rem;
+    padding-top: 0.5rem !important;
+    border-top: 1px dashed #334155 !important;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  /* Actions row */
+  #recordsTable td[data-label="Action"] {
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.25rem;
   }
 }
-
-/* Custom Scrollbar for desktop */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #f1f2f6; }
-::-webkit-scrollbar-thumb { background: #e9ebed; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
