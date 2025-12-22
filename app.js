@@ -1,15 +1,13 @@
 const SHEET_ID = '1sNaYBjA3aLI1jL7EnKYXNtrm1JUWhpEi6LBTg-53WGU';
 const SHEET_NAME = 'Sheet1'; 
-const SHEET_READ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwLaBK9WBYeewLy2N-ov03AYryjNAz8RNbhj2GgK-TIraN-Tnfy8teEO5-xzLbmSQ/exec"; 
+const BASE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzr_NtlcND89fVBb18VnN1tjw0nc5IQ8Zix6Oxi8UsucSkOQwpB48P5PGyWmXFp5Gvu/exec"; 
 
 let globalData = [];
-let chartInstances = {}; // Stores chart objects to destroy/update them later
+let chartInstances = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
   if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date();
-  
-  // Initialize UI
   loadRemoteData();
   toggleInputs();
   showTab('dashboard'); 
@@ -19,17 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // NAVIGATION & UI
 // ---------------------------
 function showTab(id) {
-  // Hide all contents
   document.querySelectorAll(".tab-content").forEach(s => s.classList.add("hidden"));
-  
-  // Show target
   const target = document.getElementById(id);
   if(target) {
     target.classList.remove("hidden");
     target.classList.add("animate-fade-in");
   }
 
-  // Update Bottom Nav Colors
   document.querySelectorAll(".nav-btn-mobile").forEach(b => {
     if(b.getAttribute('onclick').includes(id)) {
         b.classList.add("active", "text-emerald-500");
@@ -42,9 +36,8 @@ function showTab(id) {
 
   window.scrollTo(0, 0);
   
-  // TRIGGER ANALYTICS RENDERING HERE
   if (id === 'analytics') {
-      setTimeout(() => renderChartsAndAnalytics(), 100); // Small delay to ensure canvas is visible
+      setTimeout(() => renderChartsAndAnalytics(), 300); 
   }
 }
 
@@ -70,10 +63,12 @@ function toggleInputs() {
 // ---------------------------
 async function loadRemoteData() {
   const tbody = document.getElementById("recordsTableBody");
-  if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 animate-pulse">Syncing with Cloud...</td></tr>';
+  if(tbody && tbody.children.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 animate-pulse">Syncing with Cloud...</td></tr>';
+  }
 
   try {
-    const response = await fetch(SHEET_READ_URL);
+    const response = await fetch(`${BASE_SHEET_URL}&_=${new Date().getTime()}`);
     const textData = await response.text();
     const json = JSON.parse(textData.substring(47).slice(0, -2));
 
@@ -90,7 +85,7 @@ async function loadRemoteData() {
         }
 
         return {
-            row_index: index, 
+            row_index: index, // Script adds +2, so we send the raw 0-based index
             date: dateVal, 
             type: getCell(1), 
             farm: getCell(2),
@@ -105,7 +100,9 @@ async function loadRemoteData() {
     processData(remoteData);
   } catch (e) {
     console.error(e);
-    if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Offline / Error</td></tr>';
+    if(tbody && tbody.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Offline / Error</td></tr>';
+    }
   }
 }
 
@@ -119,14 +116,12 @@ function processData(data) {
   let areca = { inc: 0, exp: 0 }, paddy = { inc: 0, exp: 0 };
 
   data.forEach((r, displayIndex) => {
-    // Determine Color for Amount text since Type column is gone
     let amtColor = r.type === 'income' ? 'text-emerald-400' : (r.type === 'expense' ? 'text-red-400' : 'text-amber-400');
     let sign = r.type === 'income' ? '+' : '-';
 
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-800/50 transition-colors border-b border-slate-700/50 group";
     
-    // Removed 'Type' and 'Source' columns
     tr.innerHTML = `
         <td data-label="Date" class="p-3 text-slate-300 font-mono text-xs whitespace-nowrap">${r.date}</td>
         <td data-label="Category" class="p-3 text-slate-400 text-sm">${r.category}</td>
@@ -171,8 +166,11 @@ function processData(data) {
   updateElement("paddyNet", "₹" + (paddy.inc - paddy.exp).toLocaleString('en-IN'));
   
   if(document.getElementById("arecaBar")) {
-    let p = areca.inc > 0 ? ((areca.inc - areca.exp) / areca.inc) * 100 : 0;
-    document.getElementById("arecaBar").style.width = Math.max(0, p) + "%";
+    let pAreca = areca.inc > 0 ? ((areca.inc - areca.exp) / areca.inc) * 100 : 0;
+    document.getElementById("arecaBar").style.width = Math.max(0, pAreca) + "%";
+    
+    let pPaddy = paddy.inc > 0 ? ((paddy.inc - paddy.exp) / paddy.inc) * 100 : 0;
+    if(document.getElementById("paddyBar")) document.getElementById("paddyBar").style.width = Math.max(0, pPaddy) + "%";
   }
 }
 
@@ -186,164 +184,75 @@ function renderChartsAndAnalytics() {
 
   const ctx1 = document.getElementById('trendChart');
   const ctx2 = document.getElementById('categoryChart');
-  
   if(!ctx1 || !ctx2) return;
 
-  // Destroy old charts to prevent "ghosting" effects
   if (chartInstances.trend) chartInstances.trend.destroy();
   if (chartInstances.category) chartInstances.category.destroy();
 
-  // ==========================================================
-  // CHART 1: Bar Graph - Monthly Income vs Expense (Financial Health)
-  // ==========================================================
-  
-  // 1. Group data by Month (YYYY-MM)
+  const filteredData = globalData.filter(item => {
+      if (currentView === 'household') return item.type === 'household';
+      return item.farm === currentView;
+  });
+
+  const chartTitle = document.getElementById('barChartTitle');
+  if(chartTitle) chartTitle.textContent = `${currentView} Cash Flow`;
+
   const monthlyStats = {};
-  
-  // Process data from Oldest to Newest for the graph
-  const chronologicalData = [...globalData].reverse(); 
-
-  chronologicalData.forEach(r => {
-    // Extract "Jan", "Feb" etc. from date
-    const dateObj = new Date(r.date);
-    const monthKey = dateObj.toLocaleString('default', { month: 'short', year: '2-digit' }); // e.g., "Dec 24"
-
-    if (!monthlyStats[monthKey]) monthlyStats[monthKey] = { inc: 0, exp: 0 };
-
-    if (r.type === 'income') {
-        monthlyStats[monthKey].inc += r.amount;
-    } else {
-        // Combine Farm Expense + Household for total outflow
-        monthlyStats[monthKey].exp += r.amount;
-    }
+  [...filteredData].reverse().forEach(r => {
+      const monthKey = new Date(r.date).toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (!monthlyStats[monthKey]) monthlyStats[monthKey] = { inc: 0, exp: 0 };
+      if (r.type === 'income') monthlyStats[monthKey].inc += r.amount;
+      else monthlyStats[monthKey].exp += r.amount;
   });
 
-  // 2. Get last 6 months only (for mobile readability)
   const labels = Object.keys(monthlyStats).slice(-6);
-  const incomeData = labels.map(m => monthlyStats[m].inc);
-  const expenseData = labels.map(m => monthlyStats[m].exp);
-
+  
   chartInstances.trend = new Chart(ctx1, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Income',
-          data: incomeData,
-          backgroundColor: '#10b981', // Emerald 500
-          borderRadius: 4,
-          barPercentage: 0.6
-        },
-        {
-          label: 'Expense',
-          data: expenseData,
-          backgroundColor: '#ef4444', // Red 500
-          borderRadius: 4,
-          barPercentage: 0.6
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#cbd5e1', font: {size: 10} } },
-        tooltip: {
-            callbacks: {
-                label: function(context) {
-                    return ' ' + context.dataset.label + ': ₹' + context.raw.toLocaleString();
-                }
-            }
-        }
+      type: 'bar',
+      data: {
+          labels: labels,
+          datasets: [
+              { label: 'Income', data: labels.map(m => monthlyStats[m].inc), backgroundColor: '#10b981', borderRadius: 4 },
+              { label: 'Expense', data: labels.map(m => monthlyStats[m].exp), backgroundColor: '#ef4444', borderRadius: 4 }
+          ]
       },
-      scales: {
-        x: { 
-            ticks: { color: '#94a3b8', font: {size: 10} }, 
-            grid: { display: false } 
-        },
-        y: { 
-            ticks: { display: false }, // Hide Y-axis numbers to save space on mobile
-            grid: { color: '#334155', drawBorder: false } 
-        }
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              x: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { display: false } },
+              y: { ticks: { display: false }, grid: { color: '#334155' } }
+          },
+          plugins: { legend: { labels: { color: '#cbd5e1', font: {size: 10} } } }
       }
-    }
   });
 
-  // ==========================================================
-  // CHART 2: Doughnut - Expense Breakdown (Where money goes)
-  // ==========================================================
-
-  // 1. Aggregate expenses by Category
   const catMap = {};
-  let totalExpForChart = 0;
-
-  globalData.forEach(r => {
-    if (r.type === 'expense' || r.type === 'household') {
-        catMap[r.category] = (catMap[r.category] || 0) + r.amount;
-        totalExpForChart += r.amount;
-    }
+  filteredData.forEach(r => {
+      if (r.type === 'expense' || r.type === 'household') {
+          catMap[r.category] = (catMap[r.category] || 0) + r.amount;
+      }
   });
 
-  // 2. Sort categories by highest spend
-  let sortedCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
-
-  // 3. Logic: Take top 4 categories, group the rest as "Others"
-  let finalLabels = [];
-  let finalData = [];
-  let otherSum = 0;
-
-  sortedCats.forEach((item, index) => {
-    if (index < 4) {
-        finalLabels.push(item[0]);
-        finalData.push(item[1]);
-    } else {
-        otherSum += item[1];
-    }
-  });
-
-  if (otherSum > 0) {
-      finalLabels.push('Others');
-      finalData.push(otherSum);
-  }
+  const pieLabels = Object.keys(catMap);
+  const pieData = Object.values(catMap);
 
   chartInstances.category = new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels: finalLabels,
-      datasets: [{
-        data: finalData,
-        backgroundColor: [
-            '#3b82f6', // Blue
-            '#f59e0b', // Amber
-            '#ec4899', // Pink
-            '#8b5cf6', // Violet
-            '#64748b'  // Slate (Others)
-        ],
-        borderWidth: 0,
-        hoverOffset: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '70%', // Makes it a thinner ring
-      plugins: {
-        legend: { 
-            position: 'right', 
-            labels: { color: '#cbd5e1', boxWidth: 12, font: {size: 11} } 
-        },
-        tooltip: {
-            callbacks: {
-                label: function(context) {
-                    let val = context.raw;
-                    let pct = ((val / totalExpForChart) * 100).toFixed(1) + '%';
-                    return ` ${context.label}: ₹${val.toLocaleString()} (${pct})`;
-                }
-            }
-        }
+      type: 'doughnut',
+      data: {
+          labels: pieLabels,
+          datasets: [{
+              data: pieData,
+              backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+              borderWidth: 0
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: { legend: { position: 'right', labels: { color: '#cbd5e1', font: {size: 11} } } }
       }
-    }
   });
 }
 
@@ -385,9 +294,8 @@ function deleteEntry(displayIndex, btn) {
   const item = globalData[displayIndex];
   if(!item) return;
 
-  if(!confirm(`Are you sure you want to delete this entry?\n\nDate: ${item.date}\nCategory: ${item.category}\nAmount: ₹${item.amount}`)) return;
+  if(!confirm(`Delete this entry?\n₹${item.amount} - ${item.category}`)) return;
 
-  // UI Feedback
   const originalText = btn.innerHTML;
   btn.textContent = "Wait..";
   btn.disabled = true;
@@ -400,7 +308,18 @@ function deleteEntry(displayIndex, btn) {
     .then(r => r.json())
     .then(d => { 
         if(d.result === "success") { 
-            loadRemoteData(); 
+            const deletedRowIndex = item.row_index;
+            globalData.splice(displayIndex, 1);
+            
+            // Adjust indices for remaining items so subsequent deletes work
+            globalData.forEach(row => {
+                if (row.row_index > deletedRowIndex) {
+                    row.row_index = row.row_index - 1;
+                }
+            });
+
+            processData(globalData);
+            renderChartsAndAnalytics();
         } else {
             alert("Error: " + (d.error || "Unknown error"));
             btn.innerHTML = originalText;
@@ -408,7 +327,7 @@ function deleteEntry(displayIndex, btn) {
         }
     })
     .catch(err => {
-        alert("Network error occurred.");
+        alert("Network error.");
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
@@ -462,16 +381,15 @@ function saveEntry() {
     .then(d => { 
         if(d.result === "success") { 
             resetForm();
-            loadRemoteData(); 
+            setTimeout(loadRemoteData, 500); 
             showTab('dashboard'); 
         } else {
             alert("Error: " + d.error);
         }
     })
     .catch(err => {
-        // Fallback if script doesn't return JSON
         resetForm();
-        loadRemoteData();
+        setTimeout(loadRemoteData, 500);
         showTab('dashboard');
     })
     .finally(() => { 
@@ -479,12 +397,11 @@ function saveEntry() {
         saveBtn.disabled = false; 
     });
 }
-let currentView = 'arecanut'; // Default view
+
+let currentView = 'arecanut'; 
 
 function updateAnalyticsView(view) {
     currentView = view;
-    
-    // Update Button UI
     const views = ['arecanut', 'paddy', 'household'];
     views.forEach(v => {
         const btn = document.getElementById(`btn-${v}`);
@@ -496,89 +413,5 @@ function updateAnalyticsView(view) {
             btn.classList.add('text-slate-400');
         }
     });
-
     renderChartsAndAnalytics();
-}
-
-function renderChartsAndAnalytics() {
-    if (!globalData || globalData.length === 0) return;
-
-    const ctx1 = document.getElementById('trendChart');
-    const ctx2 = document.getElementById('categoryChart');
-    if(!ctx1 || !ctx2) return;
-
-    if (chartInstances.trend) chartInstances.trend.destroy();
-    if (chartInstances.category) chartInstances.category.destroy();
-
-    // 1. FILTER DATA BASED ON VIEW
-    const filteredData = globalData.filter(item => {
-        if (currentView === 'household') return item.type === 'household';
-        return item.farm === currentView;
-    });
-
-    // Update Titles
-    document.getElementById('barChartTitle').textContent = `${currentView} Cash Flow`;
-
-    // 2. LOGIC FOR BAR CHART (Monthly)
-    const monthlyStats = {};
-    [...filteredData].reverse().forEach(r => {
-        const monthKey = new Date(r.date).toLocaleString('default', { month: 'short', year: '2-digit' });
-        if (!monthlyStats[monthKey]) monthlyStats[monthKey] = { inc: 0, exp: 0 };
-        
-        if (r.type === 'income') monthlyStats[monthKey].inc += r.amount;
-        else monthlyStats[monthKey].exp += r.amount;
-    });
-
-    const labels = Object.keys(monthlyStats).slice(-6);
-    
-    chartInstances.trend = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Income', data: labels.map(m => monthlyStats[m].inc), backgroundColor: '#10b981', borderRadius: 4 },
-                { label: 'Expense', data: labels.map(m => monthlyStats[m].exp), backgroundColor: '#ef4444', borderRadius: 4 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { display: false } },
-                y: { ticks: { display: false }, grid: { color: '#334155' } }
-            },
-            plugins: { legend: { labels: { color: '#cbd5e1', font: {size: 10} } } }
-        }
-    });
-
-    // 3. LOGIC FOR PIE CHART (Expense Breakdown)
-    const catMap = {};
-    filteredData.forEach(r => {
-        if (r.type === 'expense' || r.type === 'household') {
-            catMap[r.category] = (catMap[r.category] || 0) + r.amount;
-        }
-    });
-
-    const pieLabels = Object.keys(catMap);
-    const pieData = Object.values(catMap);
-
-    chartInstances.category = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: pieLabels,
-            datasets: [{
-                data: pieData,
-                backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: { position: 'right', labels: { color: '#cbd5e1', font: {size: 11} } }
-            }
-        }
-    });
 }

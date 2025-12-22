@@ -23,6 +23,11 @@ body {
     color: #94a3b8; /* Slate 400 */
 }
 
+/* Chart Container Safety */
+canvas {
+    min-height: 200px; /* Forces chart to have height on mobile */
+}
+
 /* =========================================
    MOBILE CARD TABLE TRANSFORMATION
    ========================================= */
@@ -36,11 +41,12 @@ body {
   #recordsTable tr {
     display: block;
     background: #1e293b; /* slate-800 */
-    margin-bottom: 0.75rem;
-    padding: 1rem;
-    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
     border: 1px solid #334155; /* slate-700 */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    position: relative;
   }
 
   /* Cells become flex rows inside the card */
@@ -48,40 +54,63 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.35rem 0 !important;
+    padding: 0.5rem 0 !important;
     border: none !important;
     text-align: right;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #e2e8f0;
+    border-bottom: 1px solid #334155 !important; /* Separator lines */
+  }
+  
+  #recordsTable td:last-child {
+      border-bottom: none !important;
   }
 
-  /* Inject labels using the data-label attribute */
+  /* Inject labels */
   #recordsTable td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #64748b; /* slate-500 */
+    color: #94a3b8; /* slate-400 */
     text-transform: uppercase;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     letter-spacing: 0.05em;
     text-align: left;
-    margin-right: 1rem;
   }
 
-  /* Styling specific fields for emphasis */
-  
-  /* Amount Field: Bigger and bold */
+  /* Emphasis for Amount */
   #recordsTable td[data-label="Amount"] {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem !important;
-    border-top: 1px dashed #334155 !important;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.35rem;
+    font-weight: 800;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
   }
 
-  /* Actions row */
+  /* --- FIX FOR ACTION BUTTONS --- */
   #recordsTable td[data-label="Action"] {
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 0.25rem;
+    display: block; /* Stack on bottom */
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 0 !important;
+  }
+
+  /* Hide the text "ACTION" */
+  #recordsTable td[data-label="Action"]::before {
+    display: none;
+  }
+
+  /* Force the buttons container to expand */
+  #recordsTable td[data-label="Action"] > div {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    justify-content: space-between; /* Spread buttons out */
+  }
+  
+  /* Make buttons big and easy to tap on mobile */
+  #recordsTable td[data-label="Action"] button {
+      flex: 1; /* Grow to fill space */
+      justify-content: center;
+      padding: 12px;
+      font-size: 0.9rem;
   }
 }

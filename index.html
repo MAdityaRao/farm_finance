@@ -31,36 +31,59 @@
   <main class="flex-1 p-4 max-w-6xl mx-auto w-full space-y-6">
 
     <section id="dashboard" class="tab-content block animate-fade-in">
-      <div class="grid grid-cols-2 gap-3 mb-6">
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-slate-400 text-[10px] uppercase font-bold">Total Income</p>
-          <p class="text-lg font-bold text-emerald-400 mt-1" id="totalIncome">₹0</p>
+      
+      <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl mb-6 overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="relative z-10">
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Net Balance</p>
+            <h1 class="text-4xl font-bold text-white tracking-tight" id="net">₹0</h1>
+            
+            <div class="mt-6 flex items-center gap-2 text-sm font-medium opacity-90 p-2 bg-slate-800/50 rounded-lg inline-flex border border-slate-700/50">
+               <span class="text-amber-400">🏠</span> 
+               <span class="text-slate-300 text-xs uppercase font-bold mr-1">Household:</span>
+               <span id="householdTotal" class="text-amber-400 font-mono">₹0</span>
+            </div>
         </div>
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-slate-400 text-[10px] uppercase font-bold">Total Expense</p>
-          <p class="text-lg font-bold text-red-400 mt-1" id="totalExpense">₹0</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden">
+          <div class="absolute right-2 top-2 opacity-20 text-3xl">⬇️</div>
+          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Income</p>
+          <p class="text-xl font-bold text-emerald-400 mt-1 truncate" id="totalIncome">₹0</p>
         </div>
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-slate-400 text-[10px] uppercase font-bold">Household</p>
-          <p class="text-lg font-bold text-amber-400 mt-1" id="householdTotal">₹0</p>
-        </div>
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-slate-400 text-[10px] uppercase font-bold">Net Balance</p>
-          <p class="text-lg font-bold text-white mt-1" id="net">₹0</p>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden">
+           <div class="absolute right-2 top-2 opacity-20 text-3xl">⬆️</div>
+          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Expense</p>
+          <p class="text-xl font-bold text-red-400 mt-1 truncate" id="totalExpense">₹0</p>
         </div>
       </div>
 
       <div class="space-y-4">
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
-          <h3 class="font-semibold text-sm mb-3 flex justify-between uppercase">Arecanut <span id="arecanutNet" class="text-emerald-400">₹0</span></h3>
-          <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
-             <div id="arecaBar" class="h-full bg-emerald-500" style="width: 0%"></div>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Crop Performance</h3>
+        
+        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-md">
+          <div class="flex justify-between items-end mb-3">
+              <div>
+                  <h3 class="text-emerald-400 font-bold text-lg flex items-center gap-2">🌴 Arecanut</h3>
+              </div>
+              <span id="arecanutNet" class="text-white font-mono text-lg font-bold">₹0</span>
+          </div>
+          <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+             <div id="arecaBar" class="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-1000" style="width: 0%"></div>
           </div>
         </div>
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
-          <h3 class="font-semibold text-sm mb-3 flex justify-between uppercase">Paddy <span id="paddyNet" class="text-emerald-400">₹0</span></h3>
-          <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
-             <div id="paddyBar" class="h-full bg-yellow-500" style="width: 0%"></div>
+
+        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-md">
+          <div class="flex justify-between items-end mb-3">
+              <div>
+                  <h3 class="text-yellow-400 font-bold text-lg flex items-center gap-2">🌾 Paddy</h3>
+              </div>
+              <span id="paddyNet" class="text-white font-mono text-lg font-bold">₹0</span>
+          </div>
+          <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+             <div id="paddyBar" class="h-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.4)] transition-all duration-1000" style="width: 0%"></div>
           </div>
         </div>
       </div>
