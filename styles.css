@@ -1,14 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* =========================================
-   BASE SETTINGS
+   BASE SETTINGS & RESETS
    ========================================= */
 body {
   font-family: 'Inter', sans-serif;
-  -webkit-tap-highlight-color: transparent; /* Removes grey tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent; /* Removes grey tap highlight on mobile buttons */
+  overscroll-behavior-y: none; /* Prevents "bounce" effect on pull-to-refresh if not handled */
 }
 
-/* Custom Scrollbar (Webkit) - Sleek & Minimal */
+/* Prevent zooming on inputs in iOS when font-size is < 16px */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* =========================================
+   CUSTOM SCROLLBAR (Sleek & Minimal)
+   ========================================= */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -24,11 +34,14 @@ body {
   background: #94a3b8; /* Slate 400 */
 }
 
-/* Fix for Chrome/Safari Input Autofill yellow background */
+/* =========================================
+   FORM AUTOFILL FIX
+   Removes the ugly yellow background Chrome adds to autofilled inputs
+   ========================================= */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
+input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px white inset !important;
     -webkit-text-fill-color: #0f172a !important; /* Slate 900 */
     transition: background-color 5000s ease-in-out 0s;
@@ -52,28 +65,39 @@ input:-webkit-autofill:active{
 .nav-btn-mobile.active {
     color: #10b981; /* Emerald 500 */
 }
+.nav-btn-mobile.active svg {
+    stroke-width: 2.5px; /* Make icon slightly bolder when active */
+}
 .nav-btn-mobile.inactive {
     color: #94a3b8; /* Slate 400 */
 }
 
 /* =========================================
-   COMPONENTS
+   COMPONENTS & UTILITIES
    ========================================= */
-/* Chart Canvas Safety */
+/* Ensure charts don't collapse */
 canvas {
     min-height: 200px;
 }
 
-/* =========================================
-   MOBILE LOGS (ACCORDION / LIST VIEW)
-   ========================================= */
-@media (max-width: 640px) {
-  /* 1. Hide the standard Table Header */
-  #recordsTable thead {
-    display: none;
-  }
+/* Utility for truncating text safely */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  /* 2. Reset Table Elements to act like Blocks */
+/* =========================================
+   MOBILE "CARD VIEW" FOR TABLES
+   This is the critical fix for mobile UI consistency
+   ========================================= */
+/* [styles.css] - Mobile Logs Alignment Fixes */
+
+@media (max-width: 640px) {
+  /* Hide standard header */
+  #recordsTable thead { display: none; }
+  
+  /* Reset table display to block */
   #recordsTable, 
   #recordsTable tbody, 
   #recordsTable tr, 
@@ -82,30 +106,22 @@ canvas {
     width: 100%;
   }
 
-  /* 3. Remove default table cell borders/padding to let JS control layout */
+  /* CRITICAL: Remove all default table padding/border */
   #recordsTable td {
     padding: 0 !important;
-    border: none !important; 
+    border: none !important;
   }
 
-  /* 4. Ensure the Row (TR) looks like a card container */
+  /* Card container adjustments */
   #recordsTable tr {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     border-radius: 1rem;
-    /* Background and Shadow are handled by Tailwind classes in JS, 
-       but we add a transition here for the click effect */
-    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-  }
-
-  /* Active state for tap feedback */
-  #recordsTable tr:active {
-    transform: scale(0.99);
-  }
-
-  /* 5. Utility for text truncation (Safety fallback) */
-  .truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
   }
 }
+
+  /* Optional: Add a slight tap effect on cards */
+  #recordsTable tr:active {
+    transform: scale(0.995);
+    transition: transform 0.1s;
+  }

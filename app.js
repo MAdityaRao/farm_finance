@@ -188,92 +188,116 @@ function renderLogsTable() {
     if(!tbody) return;
     tbody.innerHTML = "";
 
-    // Filter data based on current view
+    // 1. Filter Data
     const filteredData = globalData.filter(item => {
         if(currentLogView === 'household') return item.type === 'household';
         return item.farm === currentLogView;
     });
 
-    // Sort by date (newest first)
+    // 2. Sort by Date (Newest first)
     const sortedData = filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
 
+    // 3. Empty State
     if(sortedData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">No records found for ${currentLogView}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="block w-full p-8 text-center text-slate-400 italic">No records found for ${currentLogView}</td></tr>`;
         return;
     }
 
+    // 4. Render Rows
     sortedData.forEach((r) => {
+        const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
+        
+        // Colors & Formatting
         let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
         let sign = r.type === 'income' ? '+' : '-';
-        const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
+        
+        const dateObj = new Date(r.date);
+        const day = isNaN(dateObj) ? '00' : dateObj.getDate();
+        const month = isNaN(dateObj) ? '---' : dateObj.toLocaleString('default', { month: 'short' });
 
         const tr = document.createElement('tr');
-        // Add click event to toggle details
-        tr.className = "block bg-white mb-3 rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300";
+        
+        // CARD CONTAINER STYLING
+        tr.className = "block bg-white mb-4 rounded-2xl border border-slate-200 shadow-sm overflow-hidden";
+        
+        // CLICK HANDLER (Toggle Notes Only)
         tr.onclick = function(e) {
-            // Don't toggle if clicking a button
+            // Stop if clicking buttons
             if(e.target.closest('button')) return;
+
+            const notesDiv = this.querySelector('.notes-section');
+            const chevron = this.querySelector('.chevron-icon');
             
-            const details = this.querySelector('.details-content');
-            const arrow = this.querySelector('.expand-arrow');
-            
-            if(details.classList.contains('max-h-0')) {
-                // Open
-                details.classList.remove('max-h-0', 'opacity-0');
-                details.classList.add('max-h-40', 'opacity-100', 'mt-3');
-                arrow.style.transform = "rotate(180deg)";
-                this.classList.add('ring-1', 'ring-emerald-500'); // Active highlight
+            if (notesDiv.classList.contains('hidden')) {
+                notesDiv.classList.remove('hidden');
+                notesDiv.classList.add('animate-fade-in');
+                chevron.style.transform = 'rotate(180deg)';
+                this.classList.add('ring-1', 'ring-emerald-500'); // Highlight active card
             } else {
-                // Close
-                details.classList.add('max-h-0', 'opacity-0');
-                details.classList.remove('max-h-40', 'opacity-100', 'mt-3');
-                arrow.style.transform = "rotate(0deg)";
+                notesDiv.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
                 this.classList.remove('ring-1', 'ring-emerald-500');
             }
         };
 
-        // Format Date nicely (e.g., "Oct 12")
-        const dateObj = new Date(r.date);
-        const dateStr = isNaN(dateObj) ? r.date : dateObj.toLocaleString('default', { month: 'short', day: 'numeric' });
-
         tr.innerHTML = `
-            <td class="block w-full p-4 cursor-pointer">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="bg-slate-100 text-slate-500 rounded-lg px-2.5 py-2 text-xs font-bold text-center min-w-[50px]">
-                            ${dateStr}
+            <td class="block w-full p-0 border-none">
+                
+                <div class="p-4 relative active:bg-slate-50 transition-colors cursor-pointer">
+                    <div class="flex items-center justify-between gap-3">
+                        
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="flex flex-col items-center justify-center w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl shrink-0">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase leading-none">${month}</span>
+                                <span class="text-xl font-bold text-slate-800 leading-none mt-0.5">${day}</span>
+                            </div>
+                            
+                            <div class="min-w-0">
+                                <h4 class="text-slate-900 font-bold text-base truncate leading-tight">${r.category}</h4>
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                                        ${r.notes ? "View Notes" : "No Details"}
+                                    </span>
+                                    <svg class="chevron-icon w-3 h-3 text-slate-300 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
-                        <div class="truncate">
-                            <div class="text-slate-800 text-sm font-bold truncate">${r.category}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 shrink-0">
-                        <div class="font-mono ${amtColor} font-bold text-base text-right whitespace-nowrap">
+
+                        <div class="${amtColor} font-mono font-bold text-lg whitespace-nowrap shrink-0">
                             ${sign}₹${r.amount.toLocaleString('en-IN')}
                         </div>
-                        <svg class="expand-arrow w-4 h-4 text-slate-300 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+
+                    <div class="notes-section hidden mt-4 pt-3 border-t border-dashed border-slate-200">
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-sm text-slate-600 italic leading-relaxed">
+                                "${r.notes || 'No notes provided.'}"
+                            </p>
+                            ${r.quantity ? `<div class="mt-2 text-xs font-bold text-slate-500">QTY: ${r.quantity} Kg</div>` : ''}
+                        </div>
                     </div>
                 </div>
 
-                <div class="details-content max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out">
-                    <div class="pt-3 border-t border-slate-100 border-dashed">
-                        <div class="bg-slate-50 rounded-lg p-3 mb-3">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Notes</span>
-                            <p class="text-sm text-slate-600 italic leading-relaxed">
-                                ${r.notes || "No notes provided."}
-                            </p>
-                        </div>
+                <div class="flex w-full border-t border-slate-100 bg-slate-50/50">
+                    
+                    <button onclick="editEntry(${actualIndex})" 
+                        class="w-1/2 py-3.5 flex items-center justify-center gap-2 text-slate-600 hover:text-emerald-600 hover:bg-white transition-all active:scale-95 border-r border-slate-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span class="text-xs font-bold uppercase tracking-wider">Edit</span>
+                    </button>
 
-                        <div class="flex gap-2 justify-end">
-                            <button onclick="editEntry(${actualIndex})" class="flex-1 bg-amber-50 text-amber-600 border border-amber-200 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-amber-100 transition-colors">
-                                ✏️ Edit
-                            </button>
-                            <button onclick="deleteEntry(${actualIndex}, this)" class="flex-1 bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-red-100 transition-colors">
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </div>
+                    <button onclick="deleteEntry(${actualIndex}, this)" 
+                        class="w-1/2 py-3.5 flex items-center justify-center gap-2 text-slate-600 hover:text-red-500 hover:bg-white transition-all active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span class="text-xs font-bold uppercase tracking-wider">Delete</span>
+                    </button>
+
                 </div>
             </td>
         `;
