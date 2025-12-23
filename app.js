@@ -182,6 +182,7 @@ function updateLogsView(view) {
     renderLogsTable();
 }
 
+//
 function renderLogsTable() {
     const tbody = document.getElementById("recordsTableBody");
     if(!tbody) return;
@@ -202,38 +203,77 @@ function renderLogsTable() {
     }
 
     sortedData.forEach((r) => {
-        // WHITE THEME COLORS
         let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
         let sign = r.type === 'income' ? '+' : '-';
+        const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 group";
-        
-        const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
-        
-        const noteContent = r.notes ? `<span class="mobile-note-text">${r.notes}</span>` : '<span class="text-slate-300 text-xs">-</span>';
+        // Add click event to toggle details
+        tr.className = "block bg-white mb-3 rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300";
+        tr.onclick = function(e) {
+            // Don't toggle if clicking a button
+            if(e.target.closest('button')) return;
+            
+            const details = this.querySelector('.details-content');
+            const arrow = this.querySelector('.expand-arrow');
+            
+            if(details.classList.contains('max-h-0')) {
+                // Open
+                details.classList.remove('max-h-0', 'opacity-0');
+                details.classList.add('max-h-40', 'opacity-100', 'mt-3');
+                arrow.style.transform = "rotate(180deg)";
+                this.classList.add('ring-1', 'ring-emerald-500'); // Active highlight
+            } else {
+                // Close
+                details.classList.add('max-h-0', 'opacity-0');
+                details.classList.remove('max-h-40', 'opacity-100', 'mt-3');
+                arrow.style.transform = "rotate(0deg)";
+                this.classList.remove('ring-1', 'ring-emerald-500');
+            }
+        };
+
+        // Format Date nicely (e.g., "Oct 12")
+        const dateObj = new Date(r.date);
+        const dateStr = isNaN(dateObj) ? r.date : dateObj.toLocaleString('default', { month: 'short', day: 'numeric' });
 
         tr.innerHTML = `
-            <td data-label="Date" class="p-4 text-slate-500 font-mono text-xs whitespace-nowrap font-medium">${r.date}</td>
-            
-            <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">
-                ${r.category}
-            </td>
+            <td class="block w-full p-4 cursor-pointer">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="bg-slate-100 text-slate-500 rounded-lg px-2.5 py-2 text-xs font-bold text-center min-w-[50px]">
+                            ${dateStr}
+                        </div>
+                        <div class="truncate">
+                            <div class="text-slate-800 text-sm font-bold truncate">${r.category}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 shrink-0">
+                        <div class="font-mono ${amtColor} font-bold text-base text-right whitespace-nowrap">
+                            ${sign}₹${r.amount.toLocaleString('en-IN')}
+                        </div>
+                        <svg class="expand-arrow w-4 h-4 text-slate-300 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
 
-            <td data-label="Notes" class="p-4 sm:max-w-[200px] sm:truncate">
-                ${noteContent}
-            </td>
+                <div class="details-content max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <div class="pt-3 border-t border-slate-100 border-dashed">
+                        <div class="bg-slate-50 rounded-lg p-3 mb-3">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Notes</span>
+                            <p class="text-sm text-slate-600 italic leading-relaxed">
+                                ${r.notes || "No notes provided."}
+                            </p>
+                        </div>
 
-            <td data-label="Amount" class="p-4 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
-            
-            <td data-label="Action" class="p-4">
-                <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <button onclick="editEntry(${actualIndex})" class="text-amber-600 hover:text-amber-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 transition-colors">
-                        <span>✏️</span> Edit
-                    </button>
-                    <button onclick="deleteEntry(${actualIndex}, this)" class="text-red-600 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
-                        <span>🗑️</span> Del
-                    </button>
+                        <div class="flex gap-2 justify-end">
+                            <button onclick="editEntry(${actualIndex})" class="flex-1 bg-amber-50 text-amber-600 border border-amber-200 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-amber-100 transition-colors">
+                                ✏️ Edit
+                            </button>
+                            <button onclick="deleteEntry(${actualIndex}, this)" class="flex-1 bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-red-100 transition-colors">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </td>
         `;

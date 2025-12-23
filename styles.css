@@ -1,21 +1,54 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* =========================================
+   BASE SETTINGS
+   ========================================= */
 body {
   font-family: 'Inter', sans-serif;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; /* Removes grey tap highlight on mobile */
 }
 
-/* Animations */
+/* Custom Scrollbar (Webkit) - Sleek & Minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Slate 300 */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Slate 400 */
+}
+
+/* Fix for Chrome/Safari Input Autofill yellow background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #0f172a !important; /* Slate 900 */
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* =========================================
+   ANIMATIONS
+   ========================================= */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Nav Active States */
+/* =========================================
+   NAVIGATION STATES
+   ========================================= */
 .nav-btn-mobile.active {
     color: #10b981; /* Emerald 500 */
 }
@@ -23,124 +56,56 @@ body {
     color: #94a3b8; /* Slate 400 */
 }
 
+/* =========================================
+   COMPONENTS
+   ========================================= */
 /* Chart Canvas Safety */
 canvas {
     min-height: 200px;
 }
 
 /* =========================================
-   MOBILE CARD TABLE TRANSFORMATION (WHITE THEME)
+   MOBILE LOGS (ACCORDION / LIST VIEW)
    ========================================= */
 @media (max-width: 640px) {
+  /* 1. Hide the standard Table Header */
   #recordsTable thead {
     display: none;
   }
 
-  /* Card Container */
-  #recordsTable tr {
-    display: block;
-    background: #ffffff; 
-    margin-bottom: 1rem;
-    padding: 1.25rem;
-    border-radius: 1rem;
-    border: 1px solid #e2e8f0; /* slate-200 */
-    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    position: relative;
-    transition: transform 0.2s;
-  }
-  
-  #recordsTable tr:active {
-      transform: scale(0.98);
-  }
-
-  /* General Cell Styling */
+  /* 2. Reset Table Elements to act like Blocks */
+  #recordsTable, 
+  #recordsTable tbody, 
+  #recordsTable tr, 
   #recordsTable td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.6rem 0 !important;
-    border: none !important;
-    text-align: right;
-    font-size: 0.95rem;
-    color: #1e293b; /* slate-800 */
-    border-bottom: 1px dashed #f1f5f9 !important;
-  }
-  
-  #recordsTable td:last-child {
-      border-bottom: none !important;
-  }
-
-  /* Labels (Date, Category, Amount) */
-  #recordsTable td::before {
-    content: attr(data-label);
-    font-weight: 700;
-    color: #94a3b8; /* slate-400 */
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    text-align: left;
-  }
-
-  /* --- SPECIFIC STYLING FOR NOTES ON MOBILE --- */
-  #recordsTable td[data-label="Notes"] {
-      display: block !important; /* Stack vertically */
-      text-align: left;
-      background-color: #f8fafc; /* slate-50 */
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      padding: 0.75rem !important;
-      border-radius: 0.5rem;
-      border: 1px solid #f1f5f9 !important;
-  }
-
-  /* Hide the "NOTES" label to save space, or keep it if you prefer */
-  #recordsTable td[data-label="Notes"]::before {
-      display: block;
-      margin-bottom: 0.25rem;
-      color: #cbd5e1; /* Lighter color */
-      font-size: 0.65rem;
-  }
-
-  /* Styling for the Note Text itself */
-  .mobile-note-text {
-      font-size: 0.85rem;
-      color: #475569; /* slate-600 */
-      font-style: italic;
-      line-height: 1.4;
-      white-space: normal !important; /* Allow text wrapping */
-      word-break: break-word;
-  }
-
-  /* Emphasis for Amount */
-  #recordsTable td[data-label="Amount"] {
-    font-size: 1.25rem;
-    font-weight: 800;
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-  }
-
-  /* Actions Container */
-  #recordsTable td[data-label="Action"] {
     display: block;
     width: 100%;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem !important;
   }
 
-  #recordsTable td[data-label="Action"]::before { display: none; }
-
-  #recordsTable td[data-label="Action"] > div {
-    display: flex;
-    width: 100%;
-    gap: 12px;
+  /* 3. Remove default table cell borders/padding to let JS control layout */
+  #recordsTable td {
+    padding: 0 !important;
+    border: none !important; 
   }
-  
-  /* Buttons inside Cards */
-  #recordsTable td[data-label="Action"] button {
-      flex: 1;
-      justify-content: center;
-      padding: 10px;
-      border-radius: 8px;
+
+  /* 4. Ensure the Row (TR) looks like a card container */
+  #recordsTable tr {
+    margin-bottom: 0.75rem;
+    border-radius: 1rem;
+    /* Background and Shadow are handled by Tailwind classes in JS, 
+       but we add a transition here for the click effect */
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  }
+
+  /* Active state for tap feedback */
+  #recordsTable tr:active {
+    transform: scale(0.99);
+  }
+
+  /* 5. Utility for text truncation (Safety fallback) */
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
