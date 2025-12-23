@@ -1,29 +1,37 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  <title>FarmLog Mobile</title>
+  <title>FarmLog Premium</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' } } } }
+      theme: { 
+        extend: { 
+          colors: { 
+            slate: { 850: '#1e293b', 900: '#0f172a' } 
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        } 
+      }
     }
   </script>
   <link rel="stylesheet" href="styles.css"> 
 </head>
 
-<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col pb-24">
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col pb-24">
 
-  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50 shadow-md">
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold flex items-center gap-2">
+      <h1 class="text-xl font-bold flex items-center gap-2 tracking-tight text-slate-900">
         <span>🌾</span> <span class="hidden sm:inline">Farm & Finance</span><span class="sm:hidden">FarmLog</span>
       </h1>
-      <div class="bg-slate-900 px-3 py-1 rounded-full border border-slate-700 text-xs font-mono">
-        Net: <span id="headerNet" class="text-emerald-400">₹0</span>
+      <div class="bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200 text-sm font-semibold shadow-inner">
+        Net: <span id="headerNet" class="text-emerald-600">₹0</span>
       </div>
     </div>
   </header>
@@ -32,73 +40,67 @@
 
     <section id="dashboard" class="tab-content block animate-fade-in">
       
-      <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl mb-6 overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        
+      <div class="relative bg-white p-8 rounded-2xl border border-slate-200 shadow-xl mb-6 overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 z-0"></div>
         <div class="relative z-10">
-            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Net Balance</p>
-            <h1 class="text-4xl font-bold text-white tracking-tight" id="net">₹0</h1>
-            
-            <div class="mt-6 flex items-center gap-2 text-sm font-medium opacity-90 p-2 bg-slate-800/50 rounded-lg inline-flex border border-slate-700/50">
-               <span class="text-amber-400">🏠</span> 
-               <span class="text-slate-300 text-xs uppercase font-bold mr-1">Household:</span>
-               <span id="householdTotal" class="text-amber-400 font-mono">₹0</span>
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Total Net Balance</p>
+            <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight mb-6" id="net">₹0</h1>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-200 shadow-sm">
+               <span class="text-amber-500">🏠</span> 
+               <span class="text-slate-500 text-xs uppercase font-bold">Household:</span>
+               <span id="householdTotal" class="text-slate-800 font-mono font-bold">₹0</span>
             </div>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4 mb-8">
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden">
-          <div class="absolute right-2 top-2 opacity-20 text-3xl">⬇️</div>
-          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Income</p>
-          <p class="text-xl font-bold text-emerald-400 mt-1 truncate" id="totalIncome">₹0</p>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md relative overflow-hidden group hover:shadow-lg transition-shadow">
+          <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform">⬇️</div>
+          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Income</p>
+          <p class="text-2xl font-bold text-emerald-600 mt-1 truncate" id="totalIncome">₹0</p>
         </div>
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden">
-           <div class="absolute right-2 top-2 opacity-20 text-3xl">⬆️</div>
-          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Expense</p>
-          <p class="text-xl font-bold text-red-400 mt-1 truncate" id="totalExpense">₹0</p>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md relative overflow-hidden group hover:shadow-lg transition-shadow">
+           <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform">⬆️</div>
+          <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Expense</p>
+          <p class="text-2xl font-bold text-red-500 mt-1 truncate" id="totalExpense">₹0</p>
         </div>
       </div>
 
       <div class="space-y-4">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Crop Performance</h3>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Performance</h3>
         
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-md">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-end mb-3">
-              <div>
-                  <h3 class="text-emerald-400 font-bold text-lg flex items-center gap-2">🌴 Arecanut</h3>
-              </div>
-              <span id="arecanutNet" class="text-white font-mono text-lg font-bold">₹0</span>
+              <h3 class="text-slate-800 font-bold text-lg flex items-center gap-2">🌴 Arecanut</h3>
+              <span id="arecanutNet" class="text-slate-900 font-mono text-lg font-bold">₹0</span>
           </div>
-          <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
-             <div id="arecaBar" class="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-1000" style="width: 0%"></div>
+          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+             <div id="arecaBar" class="h-full bg-emerald-500" style="width: 0%"></div>
           </div>
         </div>
 
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-md">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-end mb-3">
-              <div>
-                  <h3 class="text-yellow-400 font-bold text-lg flex items-center gap-2">🌾 Paddy</h3>
-              </div>
-              <span id="paddyNet" class="text-white font-mono text-lg font-bold">₹0</span>
+              <h3 class="text-slate-800 font-bold text-lg flex items-center gap-2">🌾 Paddy</h3>
+              <span id="paddyNet" class="text-slate-900 font-mono text-lg font-bold">₹0</span>
           </div>
-          <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
-             <div id="paddyBar" class="h-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.4)] transition-all duration-1000" style="width: 0%"></div>
+          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+             <div id="paddyBar" class="h-full bg-amber-400" style="width: 0%"></div>
           </div>
         </div>
       </div>
     </section>
 
     <section id="add" class="tab-content hidden">
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg relative">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xl relative">
         <input type="hidden" id="editRowIndex" value="">
         
-        <div class="space-y-5">
-          <h2 id="formTitle" class="text-lg font-bold text-slate-200 border-b border-slate-700 pb-2">New Entry</h2>
+        <div class="space-y-6">
+          <h2 id="formTitle" class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4">New Entry</h2>
           
           <div>
-            <label class="block text-xs text-slate-400 mb-1 uppercase font-bold tracking-wider">Entry Type</label>
-            <select id="entryType" onchange="toggleInputs()" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+            <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Type</label>
+            <select id="entryType" onchange="toggleInputs()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none font-medium">
               <option value="income">🟢 Farm Income</option>
               <option value="expense">🔴 Farm Expense</option>
               <option value="household">🏠 Household Expense</option>
@@ -106,8 +108,8 @@
           </div>
 
           <div id="farmGroup">
-            <label class="block text-xs text-slate-400 mb-1 uppercase font-bold tracking-wider">Source</label>
-            <select id="farmType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+            <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Source</label>
+            <select id="farmType" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none font-medium">
               <option value="arecanut">🌴 Arecanut</option>
               <option value="paddy">🌾 Paddy</option>
               <option value="other">General</option>
@@ -116,12 +118,12 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs text-slate-400 mb-1 uppercase font-bold tracking-wider">Date</label>
-              <input type="date" id="date" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Date</label>
+              <input type="date" id="date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" />
             </div>
             <div>
-              <label class="block text-xs text-slate-400 mb-1 uppercase font-bold tracking-wider">Category</label>
-              <input list="catList" id="category" placeholder="e.g. Labor" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Category</label>
+              <input list="catList" id="category" placeholder="e.g. Labor" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" />
               <datalist id="catList">
                 <option value="Labor">Fertilizer</option>
                 <option value="Sales">Groceries</option>
@@ -130,91 +132,97 @@
             </div>
           </div>
 
-          <div id="incomeInputs" class="grid grid-cols-2 gap-4 p-3 bg-slate-900/50 border border-slate-700 rounded-lg hidden">
+          <div id="incomeInputs" class="grid grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hidden">
             <div>
-                <label class="block text-[10px] text-slate-500 mb-1">Quantity (Kg)</label>
-                <input type="number" id="quantity" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white" />
+                <label class="block text-[10px] text-slate-500 mb-1 font-bold">Quantity (Kg)</label>
+                <input type="number" id="quantity" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-900 shadow-sm" />
             </div>
             <div>
-                <label class="block text-[10px] text-slate-500 mb-1">Rate (₹/Kg)</label>
-                <input type="number" id="rate" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white" />
+                <label class="block text-[10px] text-slate-500 mb-1 font-bold">Rate (₹/Kg)</label>
+                <input type="number" id="rate" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-900 shadow-sm" />
             </div>
           </div>
 
           <div>
-             <label class="block text-xs text-slate-400 mb-1 uppercase font-bold tracking-wider">Amount</label>
-             <input type="number" id="amount" placeholder="₹0" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-4 text-2xl font-bold text-white focus:border-emerald-500 outline-none transition-colors" />
+             <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Amount</label>
+             <div class="relative">
+                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">₹</span>
+                 <input type="number" id="amount" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-10 pr-4 text-2xl font-bold text-slate-900 focus:border-emerald-500 outline-none transition-colors" />
+             </div>
           </div>
 
-          <div class="flex gap-3">
-              <button id="cancelEditBtn" onclick="resetForm()" class="hidden w-1/3 bg-slate-700 hover:bg-slate-600 py-4 rounded-xl font-bold text-sm text-slate-300">Cancel</button>
-              <button id="saveBtn" onclick="saveEntry()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-bold text-lg text-white shadow-lg active:scale-95 transition-all">Save Entry</button>
+          <div class="flex gap-3 pt-2">
+              <button id="cancelEditBtn" onclick="resetForm()" class="hidden w-1/3 bg-slate-100 hover:bg-slate-200 py-4 rounded-xl font-bold text-sm text-slate-600">Cancel</button>
+              <button id="saveBtn" onclick="saveEntry()" class="w-full bg-slate-900 hover:bg-slate-800 py-4 rounded-xl font-bold text-lg text-white shadow-lg active:scale-95 transition-all">Save Entry</button>
           </div>
         </div>
       </div>
     </section>
 
-   <section id="analytics" class="tab-content hidden space-y-4">
-    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
-        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white">🌴 Arecanut</button>
-        <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-slate-400">🌾 Paddy</button>
-        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-slate-400">🏠 House</button>
+   <section id="analytics" class="tab-content hidden space-y-6">
+    <div class="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-slate-900 text-white shadow-md">🌴 Arecanut</button>
+        <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🌾 Paddy</button>
+        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🏠 House</button>
     </div>
 
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-      <h3 id="barChartTitle" class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-wider">Cash Flow</h3>
-      <div class="h-56"><canvas id="trendChart"></canvas></div>
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
+      <h3 id="barChartTitle" class="text-sm font-bold mb-6 text-slate-800 uppercase tracking-wide">Cash Flow</h3>
+      <div class="h-64"><canvas id="trendChart"></canvas></div>
     </div>
 
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-      <h3 class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-wider">Expense Breakdown</h3>
-      <div class="h-56"><canvas id="categoryChart"></canvas></div>
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
+      <h3 class="text-sm font-bold mb-6 text-slate-800 uppercase tracking-wide">Expense Breakdown</h3>
+      <div class="h-64"><canvas id="categoryChart"></canvas></div>
     </div>
-</section>
+  </section>
 
     <section id="records" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-4 sticky top-0 bg-slate-900 z-10 py-2">
-        <h2 class="font-bold text-lg">Transactions</h2>
-        <button onclick="loadRemoteData()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">🔄 Refresh</button>
+      <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-50 z-10 py-2 backdrop-blur-sm">
+        <h2 class="font-bold text-xl text-slate-900">Transactions</h2>
+        <button onclick="loadRemoteData()" class="bg-white hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-sm transition-all flex items-center gap-1">
+            <span>🔄</span> Refresh
+        </button>
       </div>
       
       <div class="w-full">
         <table class="w-full border-collapse" id="recordsTable">
-            <thead class="bg-slate-800 text-slate-400 uppercase text-[10px] hidden sm:table-header-group">
+            <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] hidden sm:table-header-group border-b border-slate-200">
               <tr>
-                  <th class="p-3 text-left">Date</th>
-                  <th class="p-3 text-left">Category</th>
-                  <th class="p-3 text-right">Amount</th>
-                  <th class="p-3 text-center">Action</th>
+                  <th class="p-4 text-left font-bold tracking-wider">Date</th>
+                  <th class="p-4 text-left font-bold tracking-wider">Category</th>
+                  <th class="p-4 text-right font-bold tracking-wider">Amount</th>
+                  <th class="p-4 text-center font-bold tracking-wider">Action</th>
               </tr>
             </thead>
-            <tbody id="recordsTableBody" class="divide-y divide-slate-800">
-                </tbody>
+            <tbody id="recordsTableBody" class="divide-y divide-slate-100">
+            </tbody>
         </table>
       </div>
     </section>
 
   </main>
 
-  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 px-2 py-3 z-50 flex justify-around items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]">
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
     <button onclick="showTab('dashboard')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📊</span>
       <span class="text-[10px] font-bold uppercase tracking-wide">Home</span>
     </button>
     <button onclick="showTab('add')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform">➕</span>
+      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">➕</span>
       <span class="text-[10px] font-bold uppercase tracking-wide">Add</span>
     </button>
     <button onclick="showTab('analytics')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform">📈</span>
+      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📈</span>
       <span class="text-[10px] font-bold uppercase tracking-wide">Stats</span>
     </button>
     <button onclick="showTab('records')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform">📑</span>
+      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📑</span>
       <span class="text-[10px] font-bold uppercase tracking-wide">Logs</span>
     </button>
   </nav>
 
   <script src="app.js"></script>
+  <script src="chart.js"></script>
 </body>
 </html>

@@ -1,10 +1,9 @@
 const SHEET_ID = '1sNaYBjA3aLI1jL7EnKYXNtrm1JUWhpEi6LBTg-53WGU';
 const SHEET_NAME = 'Sheet1'; 
 const BASE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzr_NtlcND89fVBb18VnN1tjw0nc5IQ8Zix6Oxi8UsucSkOQwpB48P5PGyWmXFp5Gvu/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdUIq-qzjnC82b-pdPGCJ3tbOpt-M8-gkDnrRSv7RKMMD5wg9qzQ4YK6vl06LK5L0/exec"; 
 
 let globalData = [];
-let chartInstances = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
   if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date();
@@ -35,9 +34,10 @@ function showTab(id) {
   });
 
   window.scrollTo(0, 0);
-  
-  if (id === 'analytics') {
-      setTimeout(() => renderChartsAndAnalytics(), 300); 
+
+  // Trigger charts if entering analytics
+  if(id === 'analytics' && typeof renderChartsAndAnalytics === 'function') {
+      setTimeout(() => renderChartsAndAnalytics(), 100);
   }
 }
 
@@ -85,7 +85,7 @@ async function loadRemoteData() {
         }
 
         return {
-            row_index: index, // Script adds +2, so we send the raw 0-based index
+            originalIndex: index, 
             date: dateVal, 
             type: getCell(1), 
             farm: getCell(2),
@@ -96,7 +96,6 @@ async function loadRemoteData() {
         };
     });
 
-    remoteData.sort((a,b) => new Date(b.date) - new Date(a.date));
     processData(remoteData);
   } catch (e) {
     console.error(e);
@@ -115,23 +114,29 @@ function processData(data) {
   let totalInc = 0, totalExp = 0, household = 0;
   let areca = { inc: 0, exp: 0 }, paddy = { inc: 0, exp: 0 };
 
-  data.forEach((r, displayIndex) => {
-    let amtColor = r.type === 'income' ? 'text-emerald-400' : (r.type === 'expense' ? 'text-red-400' : 'text-amber-400');
+  const sortedData = [...data].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  sortedData.forEach((r, displayIndex) => {
+    // WHITE THEME COLORS
+    let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
     let sign = r.type === 'income' ? '+' : '-';
 
     const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-800/50 transition-colors border-b border-slate-700/50 group";
+    // WHITE THEME BORDERS & HOVER
+    tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 group";
+    
+    const actualIndex = data.findIndex(item => item.originalIndex === r.originalIndex);
     
     tr.innerHTML = `
-        <td data-label="Date" class="p-3 text-slate-300 font-mono text-xs whitespace-nowrap">${r.date}</td>
-        <td data-label="Category" class="p-3 text-slate-400 text-sm">${r.category}</td>
-        <td data-label="Amount" class="p-3 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
-        <td data-label="Action" class="p-3">
-            <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-50 sm:group-hover:opacity-100 transition-opacity">
-                <button onclick="editEntry(${displayIndex})" class="text-amber-400 hover:text-amber-300 text-[10px] font-bold uppercase flex items-center gap-1 bg-slate-800 px-2 py-1.5 rounded border border-slate-700 hover:border-amber-500/50 transition-colors">
+        <td data-label="Date" class="p-4 text-slate-500 font-mono text-xs whitespace-nowrap font-medium">${r.date}</td>
+        <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">${r.category}</td>
+        <td data-label="Amount" class="p-4 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
+        <td data-label="Action" class="p-4">
+            <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <button onclick="editEntry(${actualIndex})" class="text-amber-600 hover:text-amber-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 transition-colors">
                     <span>✏️</span> Edit
                 </button>
-                <button onclick="deleteEntry(${displayIndex}, this)" class="text-red-400 hover:text-red-300 text-[10px] font-bold uppercase flex items-center gap-1 bg-slate-800 px-2 py-1.5 rounded border border-slate-700 hover:border-red-500/50 transition-colors">
+                <button onclick="deleteEntry(${actualIndex}, this)" class="text-red-600 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
                     <span>🗑️</span> Del
                 </button>
             </div>
@@ -159,7 +164,7 @@ function processData(data) {
   const headerNet = document.getElementById("headerNet");
   if(headerNet) {
       headerNet.textContent = "₹" + netVal.toLocaleString('en-IN');
-      headerNet.className = netVal >= 0 ? "text-emerald-400" : "text-red-400";
+      headerNet.className = netVal >= 0 ? "text-emerald-600" : "text-red-500";
   }
   
   updateElement("arecanutNet", "₹" + (areca.inc - areca.exp).toLocaleString('en-IN'));
@@ -172,95 +177,21 @@ function processData(data) {
     let pPaddy = paddy.inc > 0 ? ((paddy.inc - paddy.exp) / paddy.inc) * 100 : 0;
     if(document.getElementById("paddyBar")) document.getElementById("paddyBar").style.width = Math.max(0, pPaddy) + "%";
   }
+
+  // Update charts if visible
+  const analyticsSection = document.getElementById('analytics');
+  if(analyticsSection && !analyticsSection.classList.contains('hidden') && typeof renderChartsAndAnalytics === 'function') {
+      renderChartsAndAnalytics();
+  }
 }
 
 function updateElement(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
 
 // ---------------------------
-// ANALYTICS & CHARTS
-// ---------------------------
-function renderChartsAndAnalytics() {
-  if (!globalData || globalData.length === 0) return;
-
-  const ctx1 = document.getElementById('trendChart');
-  const ctx2 = document.getElementById('categoryChart');
-  if(!ctx1 || !ctx2) return;
-
-  if (chartInstances.trend) chartInstances.trend.destroy();
-  if (chartInstances.category) chartInstances.category.destroy();
-
-  const filteredData = globalData.filter(item => {
-      if (currentView === 'household') return item.type === 'household';
-      return item.farm === currentView;
-  });
-
-  const chartTitle = document.getElementById('barChartTitle');
-  if(chartTitle) chartTitle.textContent = `${currentView} Cash Flow`;
-
-  const monthlyStats = {};
-  [...filteredData].reverse().forEach(r => {
-      const monthKey = new Date(r.date).toLocaleString('default', { month: 'short', year: '2-digit' });
-      if (!monthlyStats[monthKey]) monthlyStats[monthKey] = { inc: 0, exp: 0 };
-      if (r.type === 'income') monthlyStats[monthKey].inc += r.amount;
-      else monthlyStats[monthKey].exp += r.amount;
-  });
-
-  const labels = Object.keys(monthlyStats).slice(-6);
-  
-  chartInstances.trend = new Chart(ctx1, {
-      type: 'bar',
-      data: {
-          labels: labels,
-          datasets: [
-              { label: 'Income', data: labels.map(m => monthlyStats[m].inc), backgroundColor: '#10b981', borderRadius: 4 },
-              { label: 'Expense', data: labels.map(m => monthlyStats[m].exp), backgroundColor: '#ef4444', borderRadius: 4 }
-          ]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-              x: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { display: false } },
-              y: { ticks: { display: false }, grid: { color: '#334155' } }
-          },
-          plugins: { legend: { labels: { color: '#cbd5e1', font: {size: 10} } } }
-      }
-  });
-
-  const catMap = {};
-  filteredData.forEach(r => {
-      if (r.type === 'expense' || r.type === 'household') {
-          catMap[r.category] = (catMap[r.category] || 0) + r.amount;
-      }
-  });
-
-  const pieLabels = Object.keys(catMap);
-  const pieData = Object.values(catMap);
-
-  chartInstances.category = new Chart(ctx2, {
-      type: 'doughnut',
-      data: {
-          labels: pieLabels,
-          datasets: [{
-              data: pieData,
-              backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
-              borderWidth: 0
-          }]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '70%',
-          plugins: { legend: { position: 'right', labels: { color: '#cbd5e1', font: {size: 11} } } }
-      }
-  });
-}
-
-// ---------------------------
 // EDIT & SAVE LOGIC
 // ---------------------------
-function editEntry(displayIndex) {
-  const item = globalData[displayIndex];
+function editEntry(unsortedIndex) {
+  const item = globalData[unsortedIndex];
   if(!item) return;
 
   showTab('add');
@@ -277,7 +208,7 @@ function editEntry(displayIndex) {
     document.getElementById("farmType").value = item.farm.toLowerCase();
   }
 
-  document.getElementById("editRowIndex").value = item.row_index;
+  document.getElementById("editRowIndex").value = item.originalIndex;
   document.getElementById("formTitle").textContent = "Edit Entry";
   
   const saveBtn = document.getElementById("saveBtn");
@@ -290,46 +221,89 @@ function editEntry(displayIndex) {
   saveBtn.classList.add("w-2/3");
 }
 
-function deleteEntry(displayIndex, btn) {
-  const item = globalData[displayIndex];
+function deleteEntry(unsortedIndex, btn) {
+  const item = globalData[unsortedIndex];
   if(!item) return;
-
-  if(!confirm(`Delete this entry?\n₹${item.amount} - ${item.category}`)) return;
-
+  
+  if(!confirm(`Delete this entry?\n\nCategory: ${item.category}\nAmount: ${item.amount}`)) return;
+  
   const originalText = btn.innerHTML;
-  btn.textContent = "Wait..";
+  btn.textContent = "Deleting...";
   btn.disabled = true;
+  
+  const params = new URLSearchParams();
+  params.append("action", "delete");
+  params.append("rowIndex", item.originalIndex);
+  
+  fetch(SCRIPT_URL, { method: "POST", body: params })
+    .then(r => r.json())
+    .then(d => { 
+      if(d.result === "success") { 
+        // Fade out row
+        const row = btn.closest('tr');
+        if(row) {
+          row.style.transition = "all 0.3s";
+          row.style.opacity = "0";
+          setTimeout(() => row.remove(), 300);
+        }
+        setTimeout(() => loadRemoteData(), 500);
+      } else {
+        alert("Server Error: " + (d.error || "Unknown error"));
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    })
+    .catch(err => {
+      alert("Network Error: " + err);
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+}
 
-  const formData = new FormData();
-  formData.append("action", "delete");
-  formData.append("rowIndex", item.row_index);
+function saveEntry() {
+  const saveBtn = document.getElementById("saveBtn");
+  const type = document.getElementById("entryType").value;
+  const amt = parseFloat(document.getElementById("amount").value) || 0;
+  const editIndex = document.getElementById("editRowIndex").value;
 
-  fetch(SCRIPT_URL, { method: "POST", body: formData })
+  if (amt <= 0) return alert("Please enter a valid amount");
+  const isEditing = (editIndex !== "" && editIndex !== null);
+
+  saveBtn.textContent = isEditing ? "Updating..." : "Saving...";
+  saveBtn.disabled = true;
+
+  const params = new URLSearchParams();
+  params.append("date", document.getElementById("date").value);
+  params.append("type", type);
+  params.append("farm", type === "household" ? "household" : document.getElementById("farmType").value);
+  params.append("category", document.getElementById("category").value);
+  params.append("amount", amt);
+  params.append("quantity", document.getElementById("quantity").value || 0);
+
+  if (isEditing) {
+    params.append("action", "edit"); 
+    params.append("rowIndex", editIndex);
+  } else {
+    params.append("action", "add");
+  }
+
+  fetch(SCRIPT_URL, { method: "POST", body: params })
     .then(r => r.json())
     .then(d => { 
         if(d.result === "success") { 
-            const deletedRowIndex = item.row_index;
-            globalData.splice(displayIndex, 1);
-            
-            // Adjust indices for remaining items so subsequent deletes work
-            globalData.forEach(row => {
-                if (row.row_index > deletedRowIndex) {
-                    row.row_index = row.row_index - 1;
-                }
-            });
-
-            processData(globalData);
-            renderChartsAndAnalytics();
+            resetForm();
+            setTimeout(loadRemoteData, 500); 
+            showTab('dashboard'); 
         } else {
-            alert("Error: " + (d.error || "Unknown error"));
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            alert("Error: " + d.error);
         }
     })
     .catch(err => {
-        alert("Network error.");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        alert("Request Failed: " + err);
+    })
+    .finally(() => { 
+        if(document.getElementById("formTitle").textContent === "New Entry") saveBtn.textContent = "Save Entry"; 
+        saveBtn.disabled = false; 
     });
 }
 
@@ -348,70 +322,4 @@ function resetForm() {
   document.getElementById("cancelEditBtn").classList.add("hidden");
   saveBtn.classList.remove("w-2/3");
   saveBtn.classList.add("w-full");
-}
-
-function saveEntry() {
-  const saveBtn = document.getElementById("saveBtn");
-  const type = document.getElementById("entryType").value;
-  const amt = parseFloat(document.getElementById("amount").value) || 0;
-  const editIndex = document.getElementById("editRowIndex").value;
-
-  if (amt <= 0) return alert("Please enter a valid amount");
-
-  saveBtn.textContent = editIndex ? "Updating..." : "Saving...";
-  saveBtn.disabled = true;
-
-  const formData = new FormData();
-  formData.append("date", document.getElementById("date").value);
-  formData.append("type", type);
-  formData.append("farm", type === "household" ? "household" : document.getElementById("farmType").value);
-  formData.append("category", document.getElementById("category").value);
-  formData.append("amount", amt);
-  formData.append("quantity", document.getElementById("quantity").value || 0);
-
-  if (editIndex !== "") {
-    formData.append("action", "edit"); 
-    formData.append("rowIndex", editIndex);
-  } else {
-    formData.append("action", "add");
-  }
-
-  fetch(SCRIPT_URL, { method: "POST", body: formData })
-    .then(r => r.json())
-    .then(d => { 
-        if(d.result === "success") { 
-            resetForm();
-            setTimeout(loadRemoteData, 500); 
-            showTab('dashboard'); 
-        } else {
-            alert("Error: " + d.error);
-        }
-    })
-    .catch(err => {
-        resetForm();
-        setTimeout(loadRemoteData, 500);
-        showTab('dashboard');
-    })
-    .finally(() => { 
-        if(!editIndex) saveBtn.textContent = "Save Entry"; 
-        saveBtn.disabled = false; 
-    });
-}
-
-let currentView = 'arecanut'; 
-
-function updateAnalyticsView(view) {
-    currentView = view;
-    const views = ['arecanut', 'paddy', 'household'];
-    views.forEach(v => {
-        const btn = document.getElementById(`btn-${v}`);
-        if(v === view) {
-            btn.classList.add('bg-emerald-600', 'text-white');
-            btn.classList.remove('text-slate-400');
-        } else {
-            btn.classList.remove('bg-emerald-600', 'text-white');
-            btn.classList.add('text-slate-400');
-        }
-    });
-    renderChartsAndAnalytics();
 }
