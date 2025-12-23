@@ -1,6 +1,7 @@
 const SHEET_ID = '1sNaYBjA3aLI1jL7EnKYXNtrm1JUWhpEi6LBTg-53WGU';
 const SHEET_NAME = 'Sheet1'; 
 const BASE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+// IMPORTANT: Update this URL if you redeploy your Google Script
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdUIq-qzjnC82b-pdPGCJ3tbOpt-M8-gkDnrRSv7RKMMD5wg9qzQ4YK6vl06LK5L0/exec"; 
 
 let globalData = [];
@@ -64,7 +65,7 @@ function toggleInputs() {
 async function loadRemoteData() {
   const tbody = document.getElementById("recordsTableBody");
   if(tbody && tbody.children.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 animate-pulse">Syncing with Cloud...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500 animate-pulse">Syncing...</td></tr>';
   }
 
   try {
@@ -100,7 +101,7 @@ async function loadRemoteData() {
   } catch (e) {
     console.error(e);
     if(tbody && tbody.children.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Offline / Error</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500 font-bold">Offline / Error</td></tr>';
     }
   }
 }
@@ -122,15 +123,27 @@ function processData(data) {
     let sign = r.type === 'income' ? '+' : '-';
 
     const tr = document.createElement('tr');
-    // WHITE THEME BORDERS & HOVER
     tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 group";
     
     const actualIndex = data.findIndex(item => item.originalIndex === r.originalIndex);
     
+    // Only show note row if there is a note, otherwise empty string
+    // We use a specific class 'mobile-note-text' to target it in CSS
+    const noteContent = r.notes ? `<span class="mobile-note-text">${r.notes}</span>` : '<span class="text-slate-300 text-xs">-</span>';
+
     tr.innerHTML = `
         <td data-label="Date" class="p-4 text-slate-500 font-mono text-xs whitespace-nowrap font-medium">${r.date}</td>
-        <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">${r.category}</td>
+        
+        <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">
+            ${r.category}
+        </td>
+
+        <td data-label="Notes" class="p-4 sm:max-w-[200px] sm:truncate">
+            ${noteContent}
+        </td>
+
         <td data-label="Amount" class="p-4 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
+        
         <td data-label="Action" class="p-4">
             <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button onclick="editEntry(${actualIndex})" class="text-amber-600 hover:text-amber-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 transition-colors">
@@ -178,7 +191,6 @@ function processData(data) {
     if(document.getElementById("paddyBar")) document.getElementById("paddyBar").style.width = Math.max(0, pPaddy) + "%";
   }
 
-  // Update charts if visible
   const analyticsSection = document.getElementById('analytics');
   if(analyticsSection && !analyticsSection.classList.contains('hidden') && typeof renderChartsAndAnalytics === 'function') {
       renderChartsAndAnalytics();
@@ -201,6 +213,10 @@ function editEntry(unsortedIndex) {
 
   document.getElementById("date").value = item.date;
   document.getElementById("category").value = item.category;
+  
+  // Load notes
+  document.getElementById("notes").value = item.notes || ""; 
+  
   document.getElementById("amount").value = item.amount;
   document.getElementById("quantity").value = item.quantity || "";
   
@@ -213,10 +229,9 @@ function editEntry(unsortedIndex) {
   
   const saveBtn = document.getElementById("saveBtn");
   saveBtn.textContent = "Update Entry";
-  saveBtn.className = "w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold text-lg text-white shadow-lg";
   
+  // Reset styling for update button
   document.getElementById("cancelEditBtn").classList.remove("hidden");
-  document.getElementById("cancelEditBtn").classList.add("w-1/3");
   saveBtn.classList.remove("w-full");
   saveBtn.classList.add("w-2/3");
 }
@@ -225,7 +240,7 @@ function deleteEntry(unsortedIndex, btn) {
   const item = globalData[unsortedIndex];
   if(!item) return;
   
-  if(!confirm(`Delete this entry?\n\nCategory: ${item.category}\nAmount: ${item.amount}`)) return;
+  if(!confirm(`Delete this entry?\n\nCategory: ${item.category}\nAmount: ₹${item.amount}`)) return;
   
   const originalText = btn.innerHTML;
   btn.textContent = "Deleting...";
@@ -234,6 +249,11 @@ function deleteEntry(unsortedIndex, btn) {
   const params = new URLSearchParams();
   params.append("action", "delete");
   params.append("rowIndex", item.originalIndex);
+  
+  // Extra data for Smart Delete Verification
+  params.append("category", item.category);
+  params.append("amount", item.amount);
+  params.append("type", item.type);
   
   fetch(SCRIPT_URL, { method: "POST", body: params })
     .then(r => r.json())
@@ -267,6 +287,7 @@ function saveEntry() {
   const editIndex = document.getElementById("editRowIndex").value;
 
   if (amt <= 0) return alert("Please enter a valid amount");
+  
   const isEditing = (editIndex !== "" && editIndex !== null);
 
   saveBtn.textContent = isEditing ? "Updating..." : "Saving...";
@@ -277,6 +298,10 @@ function saveEntry() {
   params.append("type", type);
   params.append("farm", type === "household" ? "household" : document.getElementById("farmType").value);
   params.append("category", document.getElementById("category").value);
+  
+  // Send notes
+  params.append("notes", document.getElementById("notes").value); 
+  
   params.append("amount", amt);
   params.append("quantity", document.getElementById("quantity").value || 0);
 
@@ -315,9 +340,11 @@ function resetForm() {
   document.getElementById("quantity").value = "";
   document.getElementById("category").value = "";
   
+  // Clear notes
+  document.getElementById("notes").value = "";
+  
   const saveBtn = document.getElementById("saveBtn");
   saveBtn.textContent = "Save Entry";
-  saveBtn.className = "w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-bold text-lg text-white shadow-lg";
   
   document.getElementById("cancelEditBtn").classList.add("hidden");
   saveBtn.classList.remove("w-2/3");

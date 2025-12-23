@@ -150,6 +150,10 @@
                  <input type="number" id="amount" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-10 pr-4 text-2xl font-bold text-slate-900 focus:border-emerald-500 outline-none transition-colors" />
              </div>
           </div>
+          <div>
+            <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Notes</label>
+            <textarea id="notes" rows="2" placeholder="Optional details..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea>
+          </div>
 
           <div class="flex gap-3 pt-2">
               <button id="cancelEditBtn" onclick="resetForm()" class="hidden w-1/3 bg-slate-100 hover:bg-slate-200 py-4 rounded-xl font-bold text-sm text-slate-600">Cancel</button>
@@ -161,7 +165,7 @@
 
    <section id="analytics" class="tab-content hidden space-y-6">
     <div class="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-slate-900 text-white shadow-md">🌴 Arecanut</button>
+        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md">🌴 Arecanut</button>
         <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🌾 Paddy</button>
         <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🏠 House</button>
     </div>
@@ -222,7 +226,7 @@
     </button>
   </nav>
 
-  <script src="app.js"></script>
   <script src="chart.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

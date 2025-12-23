@@ -102,10 +102,12 @@ function updateAnalyticsView(view) {
         if(btn) {
             if(v === view) {
                 btn.classList.add('bg-emerald-600', 'text-white');
-                btn.classList.remove('text-slate-400');
+                btn.classList.remove('text-slate-500');
+                btn.classList.remove('hover:bg-slate-50');
             } else {
                 btn.classList.remove('bg-emerald-600', 'text-white');
-                btn.classList.add('text-slate-400');
+                btn.classList.add('text-slate-500');
+                btn.classList.add('hover:bg-slate-50');
             }
         }
     });
