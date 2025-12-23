@@ -46,7 +46,7 @@
             <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Total Net Balance</p>
             <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight mb-6" id="net">₹0</h1>
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-200 shadow-sm">
-               <span class="text-amber-500">🏠</span> 
+               <span class="text-amber-500"></span> 
                <span class="text-slate-500 text-xs uppercase font-bold">Household:</span>
                <span id="householdTotal" class="text-slate-800 font-mono font-bold">₹0</span>
             </div>
@@ -55,12 +55,12 @@
 
       <div class="grid grid-cols-2 gap-4 mb-8">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md relative overflow-hidden group hover:shadow-lg transition-shadow">
-          <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform">⬇️</div>
+          <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform"></div>
           <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Income</p>
           <p class="text-2xl font-bold text-emerald-600 mt-1 truncate" id="totalIncome">₹0</p>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md relative overflow-hidden group hover:shadow-lg transition-shadow">
-           <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform">⬆️</div>
+           <div class="absolute right-3 top-3 opacity-10 text-3xl group-hover:scale-110 transition-transform"></div>
           <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Expense</p>
           <p class="text-2xl font-bold text-red-500 mt-1 truncate" id="totalExpense">₹0</p>
         </div>
@@ -71,7 +71,7 @@
         
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-end mb-3">
-              <h3 class="text-slate-800 font-bold text-lg flex items-center gap-2">🌴 Arecanut</h3>
+              <h3 class="text-slate-800 font-bold text-lg flex items-center gap-2">Arecanut</h3>
               <span id="arecanutNet" class="text-slate-900 font-mono text-lg font-bold">₹0</span>
           </div>
           <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
@@ -103,15 +103,15 @@
             <select id="entryType" onchange="toggleInputs()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none font-medium">
               <option value="income">🟢 Farm Income</option>
               <option value="expense">🔴 Farm Expense</option>
-              <option value="household">🏠 Household Expense</option>
+              <option value="household">Household Expense</option>
             </select>
           </div>
 
           <div id="farmGroup">
             <label class="block text-xs text-slate-500 mb-1.5 uppercase font-bold tracking-wider">Source</label>
             <select id="farmType" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none font-medium">
-              <option value="arecanut">🌴 Arecanut</option>
-              <option value="paddy">🌾 Paddy</option>
+              <option value="arecanut">Arecanut</option>
+              <option value="paddy">Paddy</option>
               <option value="other">General</option>
             </select>
           </div>
@@ -165,9 +165,9 @@
 
    <section id="analytics" class="tab-content hidden space-y-6">
     <div class="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md">🌴 Arecanut</button>
+        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md">Arecanut</button>
         <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🌾 Paddy</button>
-        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">🏠 House</button>
+        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">House</button>
     </div>
 
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
@@ -182,11 +182,20 @@
   </section>
 
     <section id="records" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-50 z-10 py-2 backdrop-blur-sm">
+      <div class="flex justify-between items-center mb-4 sticky top-0 bg-slate-50 z-10 py-2 backdrop-blur-sm">
         <h2 class="font-bold text-xl text-slate-900">Transactions</h2>
         <button onclick="loadRemoteData()" class="bg-white hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-sm transition-all flex items-center gap-1">
-            <span>🔄</span> Refresh
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            Refresh
         </button>
+      </div>
+
+      <div class="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <button onclick="updateLogsView('arecanut')" id="log-btn-arecanut" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md">Arecanut</button>
+        <button onclick="updateLogsView('paddy')" id="log-btn-paddy" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">Paddy</button>
+        <button onclick="updateLogsView('household')" id="log-btn-household" class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">House</button>
       </div>
       
       <div class="w-full">
@@ -208,20 +217,32 @@
   </main>
 
   <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-50 flex justify-around items-center shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
-    <button onclick="showTab('dashboard')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📊</span>
+    
+    <button onclick="showTab('dashboard')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group active text-emerald-500">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 group-hover:scale-110 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+      </svg>
       <span class="text-[10px] font-bold uppercase tracking-wide">Home</span>
     </button>
-    <button onclick="showTab('add')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">➕</span>
+    
+    <button onclick="showTab('add')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group text-slate-400">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 group-hover:scale-110 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
       <span class="text-[10px] font-bold uppercase tracking-wide">Add</span>
     </button>
-    <button onclick="showTab('analytics')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📈</span>
+    
+    <button onclick="showTab('analytics')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group text-slate-400">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 group-hover:scale-110 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
       <span class="text-[10px] font-bold uppercase tracking-wide">Stats</span>
     </button>
-    <button onclick="showTab('records')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group">
-      <span class="text-2xl group-hover:scale-110 transition-transform filter drop-shadow-sm">📑</span>
+    
+    <button onclick="showTab('records')" class="nav-btn-mobile flex flex-col items-center gap-1 w-16 group text-slate-400">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 group-hover:scale-110 transition-transform">
+         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
       <span class="text-[10px] font-bold uppercase tracking-wide">Logs</span>
     </button>
   </nav>

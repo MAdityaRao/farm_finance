@@ -5,6 +5,8 @@ const BASE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdUIq-qzjnC82b-pdPGCJ3tbOpt-M8-gkDnrRSv7RKMMD5wg9qzQ4YK6vl06LK5L0/exec"; 
 
 let globalData = [];
+// New variable to track current log view
+let currentLogView = 'arecanut';
 
 document.addEventListener('DOMContentLoaded', () => {
   if(document.getElementById("date")) document.getElementById("date").valueAsDate = new Date();
@@ -108,55 +110,12 @@ async function loadRemoteData() {
 
 function processData(data) {
   globalData = data;
-  const tbody = document.getElementById("recordsTableBody");
-  if(!tbody) return;
-  tbody.innerHTML = "";
-
+  
   let totalInc = 0, totalExp = 0, household = 0;
   let areca = { inc: 0, exp: 0 }, paddy = { inc: 0, exp: 0 };
 
-  const sortedData = [...data].sort((a,b) => new Date(b.date) - new Date(a.date));
-
-  sortedData.forEach((r, displayIndex) => {
-    // WHITE THEME COLORS
-    let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
-    let sign = r.type === 'income' ? '+' : '-';
-
-    const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 group";
-    
-    const actualIndex = data.findIndex(item => item.originalIndex === r.originalIndex);
-    
-    // Only show note row if there is a note, otherwise empty string
-    // We use a specific class 'mobile-note-text' to target it in CSS
-    const noteContent = r.notes ? `<span class="mobile-note-text">${r.notes}</span>` : '<span class="text-slate-300 text-xs">-</span>';
-
-    tr.innerHTML = `
-        <td data-label="Date" class="p-4 text-slate-500 font-mono text-xs whitespace-nowrap font-medium">${r.date}</td>
-        
-        <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">
-            ${r.category}
-        </td>
-
-        <td data-label="Notes" class="p-4 sm:max-w-[200px] sm:truncate">
-            ${noteContent}
-        </td>
-
-        <td data-label="Amount" class="p-4 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
-        
-        <td data-label="Action" class="p-4">
-            <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                <button onclick="editEntry(${actualIndex})" class="text-amber-600 hover:text-amber-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 transition-colors">
-                    <span>✏️</span> Edit
-                </button>
-                <button onclick="deleteEntry(${actualIndex}, this)" class="text-red-600 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
-                    <span>🗑️</span> Del
-                </button>
-            </div>
-        </td>
-    `;
-    tbody.appendChild(tr);
-
+  // Calculate Totals only
+  data.forEach(r => {
     if (r.type === 'income') {
         totalInc += r.amount;
         if (r.farm === 'arecanut') areca.inc += r.amount;
@@ -168,6 +127,7 @@ function processData(data) {
     } else { household += r.amount; }
   });
 
+  // Update Top Cards and Dashboard
   const netVal = totalInc - totalExp - household;
   updateElement("totalIncome", "₹" + totalInc.toLocaleString('en-IN'));
   updateElement("totalExpense", "₹" + totalExp.toLocaleString('en-IN'));
@@ -195,6 +155,90 @@ function processData(data) {
   if(analyticsSection && !analyticsSection.classList.contains('hidden') && typeof renderChartsAndAnalytics === 'function') {
       renderChartsAndAnalytics();
   }
+
+  // Render the logs table based on current filter
+  renderLogsTable();
+}
+
+// ---------------------------
+// LOGS VIEW LOGIC (NEW)
+// ---------------------------
+function updateLogsView(view) {
+    currentLogView = view;
+    
+    // Update Button Styling
+    const views = ['arecanut', 'paddy', 'household'];
+    views.forEach(v => {
+        const btn = document.getElementById(`log-btn-${v}`);
+        if(btn) {
+            if(v === view) {
+                btn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md";
+            } else {
+                btn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50";
+            }
+        }
+    });
+
+    renderLogsTable();
+}
+
+function renderLogsTable() {
+    const tbody = document.getElementById("recordsTableBody");
+    if(!tbody) return;
+    tbody.innerHTML = "";
+
+    // Filter data based on current view
+    const filteredData = globalData.filter(item => {
+        if(currentLogView === 'household') return item.type === 'household';
+        return item.farm === currentLogView;
+    });
+
+    // Sort by date (newest first)
+    const sortedData = filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if(sortedData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">No records found for ${currentLogView}</td></tr>`;
+        return;
+    }
+
+    sortedData.forEach((r) => {
+        // WHITE THEME COLORS
+        let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
+        let sign = r.type === 'income' ? '+' : '-';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 group";
+        
+        const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
+        
+        const noteContent = r.notes ? `<span class="mobile-note-text">${r.notes}</span>` : '<span class="text-slate-300 text-xs">-</span>';
+
+        tr.innerHTML = `
+            <td data-label="Date" class="p-4 text-slate-500 font-mono text-xs whitespace-nowrap font-medium">${r.date}</td>
+            
+            <td data-label="Category" class="p-4 text-slate-800 text-sm font-bold">
+                ${r.category}
+            </td>
+
+            <td data-label="Notes" class="p-4 sm:max-w-[200px] sm:truncate">
+                ${noteContent}
+            </td>
+
+            <td data-label="Amount" class="p-4 text-right font-mono ${amtColor} font-bold text-base">${sign}₹${r.amount.toLocaleString('en-IN')}</td>
+            
+            <td data-label="Action" class="p-4">
+                <div class="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button onclick="editEntry(${actualIndex})" class="text-amber-600 hover:text-amber-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 transition-colors">
+                        <span>✏️</span> Edit
+                    </button>
+                    <button onclick="deleteEntry(${actualIndex}, this)" class="text-red-600 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
+                        <span>🗑️</span> Del
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 function updateElement(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
