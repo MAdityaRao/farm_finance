@@ -319,7 +319,11 @@ function updateKPICards(metrics) {
     
     const netEl = document.getElementById('kpi-net');
     if(netEl) {
-        netEl.className = metrics.netProfit >= 0 ? "text-2xl font-bold text-slate-900 truncate" : "text-2xl font-bold text-red-600 truncate";
+        // CHANGED: Removed 'truncate' and added 'break-words'
+        // Also adjusted font size to 'text-xl sm:text-2xl' to fit better on mobile
+        netEl.className = metrics.netProfit >= 0 
+            ? "text-xl sm:text-2xl font-bold text-slate-900 break-words" 
+            : "text-xl sm:text-2xl font-bold text-red-600 break-words";
     }
 }
 
