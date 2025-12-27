@@ -225,53 +225,148 @@
       </div>
     </section>
 
-    <section id="analytics" class="tab-content hidden space-y-6">
-        <div class="flex gap-3">
-            <div class="flex bg-slate-100 p-1 rounded-lg flex-1 border border-slate-200">
-                <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm">Areca</button>
-                <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Paddy</button>
-                <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Home</button>
-            </div>
-            <select id="yearSelect" onchange="handleYearChange()" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 outline-none focus:border-slate-400">
-                <option value="all">All Time</option>
-            </select>
-        </div>
+    <!-- Replace the analytics section with this enhanced version -->
+<section id="analytics" class="tab-content hidden space-y-6">
+<div class="flex gap-3 mb-4">
+    <div class="flex bg-slate-100 p-1 rounded-lg flex-1 border border-slate-200">
+        <button onclick="updateAnalyticsView('overall')" id="btn-overall" class="flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm">Overall</button>
+        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Arecanut</button>
+        <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Paddy</button>
+        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Household</button>
+    </div>
+    <select id="yearSelect" onchange="handleYearChange()" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 outline-none focus:border-slate-400">
+        <option value="all">All Time</option>
+    </select>
+</div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Net Profit</p>
-                <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-net">₹0</h3>
+    <!-- Enhanced KPI Cards Grid -->
+    <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Net Profit</p>
+            <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-net">₹0</h3>
+            <p class="text-[9px] text-slate-500 mt-1" id="kpi-net-change">+0% vs prev</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Profit Margin</p>
+            <h3 class="text-xl font-bold text-emerald-600 truncate" id="kpi-margin">0%</h3>
+            <p class="text-[9px] text-slate-500 mt-1">Target: 25%</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">ROI</p>
+            <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-roi">0%</h3>
+            <p class="text-[9px] text-slate-500 mt-1">Return on Investment</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Efficiency</p>
+            <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-efficiency">0%</h3>
+            <p class="text-[9px] text-slate-500 mt-1">Cost to Income Ratio</p>
+        </div>
+    </div>
+
+    <!-- Advanced Metrics Section -->
+    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <h4 class="text-xs font-bold text-slate-800 mb-3">Performance Metrics</h4>
+        <div class="grid grid-cols-3 gap-2">
+            <div class="text-center">
+                <p class="text-[10px] text-slate-400 font-medium">Avg Monthly</p>
+                <p class="text-sm font-bold text-slate-900" id="kpi-avg-monthly">₹0</p>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Profit Margin</p>
-                <h3 class="text-xl font-bold text-emerald-600 truncate" id="kpi-margin">0%</h3>
+            <div class="text-center border-x border-slate-100">
+                <p class="text-[10px] text-slate-400 font-medium">Peak Month</p>
+                <p class="text-sm font-bold text-slate-900" id="kpi-peak-month">---</p>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Avg Income</p>
-                <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-avg">₹0</h3>
-            </div>
-             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Top Expense</p>
-                <h3 class="text-sm font-bold text-slate-900 truncate" id="kpi-exp">---</h3>
-                <p class="text-xs text-slate-500 font-medium truncate" id="kpi-exp-val">₹0</p>
+            <div class="text-center">
+                <p class="text-[10px] text-slate-400 font-medium">Growth Rate</p>
+                <p class="text-sm font-bold text-slate-900" id="kpi-growth-rate">0%</p>
             </div>
         </div>
+    </div>
 
+    <!-- Multi-Chart Grid -->
+    <div class="grid grid-cols-1 gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
-            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Cash Flow</h4>
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-xs font-bold text-slate-800">Monthly Trend Analysis</h4>
+                <select id="trendType" onchange="updateTrendChart()" class="text-xs border border-slate-200 rounded px-2 py-1">
+                    <option value="income_expense">Income vs Expense</option>
+                    <option value="profit">Net Profit</option>
+                    <option value="cumulative">Cumulative</option>
+                </select>
+            </div>
             <div class="h-64 relative w-full bg-white"><canvas id="trendChart"></canvas></div>
         </div>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
-            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Expense Split</h4>
-            <div class="h-64 relative w-full bg-white"><canvas id="categoryChart"></canvas></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
+                <h4 class="text-xs font-bold text-slate-800 mb-3">Expense Distribution</h4>
+                <div class="h-48 relative w-full"><canvas id="categoryChart"></canvas></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
+                <h4 class="text-xs font-bold text-slate-800 mb-3">Seasonal Analysis</h4>
+                <div class="h-48 relative w-full"><canvas id="seasonalChart"></canvas></div>
+            </div>
         </div>
 
         <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
-            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Growth Trajectory</h4>
-            <div class="h-64 relative w-full bg-white"><canvas id="profitChart"></canvas></div>
+            <h4 class="text-xs font-bold text-slate-800 mb-4">Forecast & Projections</h4>
+            <div class="h-64 relative w-full bg-white"><canvas id="forecastChart"></canvas></div>
         </div>
-    </section>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
+            <h4 class="text-xs font-bold text-slate-800 mb-3">Key Performance Indicators</h4>
+            <div class="space-y-3">
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-600">Cost Efficiency</span>
+                        <span class="font-bold" id="kpi-cost-efficiency">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500 rounded-full" id="cost-efficiency-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-600">Yield per Investment</span>
+                        <span class="font-bold" id="kpi-yield-ratio">0.0x</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" id="yield-ratio-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-600">Risk Level</span>
+                        <span class="font-bold" id="kpi-risk-level">Low</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500 rounded-full" id="risk-level-bar" style="width: 30%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table for Detailed Analysis -->
+    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <h4 class="text-xs font-bold text-slate-800 mb-3">Monthly Breakdown</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="text-left p-2 text-slate-500 font-semibold">Month</th>
+                        <th class="text-right p-2 text-slate-500 font-semibold">Income</th>
+                        <th class="text-right p-2 text-slate-500 font-semibold">Expense</th>
+                        <th class="text-right p-2 text-slate-500 font-semibold">Profit</th>
+                        <th class="text-right p-2 text-slate-500 font-semibold">Margin</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyBreakdown">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
     <section id="records" class="tab-content hidden">
       <div class="flex items-center justify-between mb-5">

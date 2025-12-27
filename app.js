@@ -193,6 +193,14 @@ function processData(data) {
       if(r.type === 'income') monthlyData[monthKey] += amount;
     }
   });
+  function triggerAnalyticsUpdate() {
+    const analyticsSection = document.getElementById('analytics');
+    if(analyticsSection && !analyticsSection.classList.contains('hidden')) {
+        // Reset to overall view to show all data
+        currentView = 'overall';
+        updateAnalyticsView('overall');
+    }
+}
 
   const netVal = totalInc - totalExp - household;
   const monthCount = Object.keys(monthlyData).length || 1;
