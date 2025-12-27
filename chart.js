@@ -34,11 +34,11 @@ function populateYearSelector(years) {
   
   const oldVal = yearSelect.value;
   
-  yearSelect.innerHTML = '<option value="all">📅 All Time</option>';
+  yearSelect.innerHTML = '<option value="all">All Time</option>';
   years.forEach(y => {
     const opt = document.createElement('option');
     opt.value = y;
-    opt.textContent = `📊 ${y}`;
+    opt.textContent = `${y}`;
     yearSelect.appendChild(opt);
   });
 

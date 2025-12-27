@@ -15,14 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("date").valueAsDate = new Date();
   }
   
-  // Add loading state indicators
   showLoadingState();
-  
   loadRemoteData();
   toggleInputs();
   showTab('dashboard');
-  
-  // Initialize quantity/rate calculator
   initPriceCalculator();
 });
 
@@ -41,20 +37,15 @@ function showTab(id) {
     target.classList.add("animate-fade-in");
   }
 
-  // Update navigation buttons state
+  // Update navigation buttons
   document.querySelectorAll(".nav-btn-mobile").forEach(b => {
-    if(b.getAttribute('onclick').includes(id)) {
-      b.classList.add("active", "text-emerald-500");
-      b.classList.remove("inactive", "text-slate-400");
-    } else {
-      b.classList.add("inactive", "text-slate-400");
-      b.classList.remove("active", "text-emerald-500");
-    }
+    const isTarget = b.getAttribute('onclick').includes(id);
+    b.classList.toggle("text-emerald-600", isTarget);
+    b.classList.toggle("text-slate-400", !isTarget);
   });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Trigger chart rendering if entering analytics
   if(id === 'analytics' && typeof renderChartsAndAnalytics === 'function') {
     setTimeout(() => renderChartsAndAnalytics(), 150);
   }
@@ -64,6 +55,10 @@ function toggleInputs() {
   const type = document.getElementById("entryType").value;
   const incInputs = document.getElementById("incomeInputs");
   const farmGroup = document.getElementById("farmGroup");
+  
+  // Sync radio buttons if triggered programmatically
+  const radios = document.getElementsByName('entryTypeSelect');
+  radios.forEach(r => { if(r.value === type) r.checked = true; });
   
   if (type === "income") {
     incInputs?.classList.remove("hidden");
@@ -103,15 +98,13 @@ function initPriceCalculator() {
 // DATA FETCHING & PROCESSING
 // ==================================
 function showLoadingState() {
-  const tbody = document.getElementById("recordsTableBody");
-  if(tbody) {
-    tbody.innerHTML = `
-      <tr><td colspan="4" class="p-8 text-center">
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-          <p class="text-slate-500 font-semibold">Loading your data...</p>
-        </div>
-      </td></tr>
+  const container = document.getElementById("recordsTableBody");
+  if(container) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div class="w-8 h-8 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+        <p class="text-xs font-semibold">Loading data...</p>
+      </div>
     `;
   }
 }
@@ -119,12 +112,10 @@ function showLoadingState() {
 async function loadRemoteData() {
   if(isLoading) return;
   isLoading = true;
-  
   showLoadingState();
 
   try {
     const response = await fetch(`${BASE_SHEET_URL}&_=${new Date().getTime()}`);
-    
     if(!response.ok) throw new Error('Network response failed');
     
     const textData = await response.text();
@@ -132,10 +123,7 @@ async function loadRemoteData() {
 
     const remoteData = json.table.rows.map((row, index) => {
       const getCell = (i) => (row.c[i] ? (row.c[i].v !== null ? row.c[i].v : '') : '');
-      
       let dateVal = getCell(0);
-      
-      // Handle Google Sheets date formatting
       if(typeof dateVal === 'string' && dateVal.includes('Date')) {
         const parts = /\d+,\d+,\d+/.exec(dateVal)[0].split(',');
         const d = new Date(parts[0], parts[1], parts[2]);
@@ -157,31 +145,20 @@ async function loadRemoteData() {
     });
 
     processData(remoteData);
-    
-    // Success feedback
-    showToast('Data synced successfully', 'success');
+    showToast('Data Synced', 'success');
     
   } catch (e) {
     console.error('Data loading error:', e);
-    
-    const tbody = document.getElementById("recordsTableBody");
-    if(tbody && tbody.children.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="4" class="p-8 text-center">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <span class="text-2xl">⚠️</span>
-            </div>
-            <p class="text-red-600 font-bold">Connection Error</p>
-            <button onclick="loadRemoteData()" class="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-all">
-              Retry
-            </button>
-          </div>
-        </td></tr>
+    const container = document.getElementById("recordsTableBody");
+    if(container && container.children.length <= 1) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-10">
+          <p class="text-red-500 font-bold text-sm mb-2">Connection Failed</p>
+          <button onclick="loadRemoteData()" class="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold text-slate-700">Retry</button>
+        </div>
       `;
     }
-    
-    showToast('Failed to load data. Please check your connection.', 'error');
+    showToast('Connection Error', 'error');
   } finally {
     isLoading = false;
   }
@@ -195,10 +172,8 @@ function processData(data) {
   let monthlyData = {};
   let totalTransactions = data.length;
 
-  // Calculate all metrics
   data.forEach(r => {
     const amount = r.amount || 0;
-    
     if (r.type === 'income') {
       totalInc += amount;
       if (r.farm === 'arecanut') areca.inc += amount;
@@ -211,7 +186,6 @@ function processData(data) {
       household += amount; 
     }
     
-    // Monthly aggregation
     const d = new Date(r.date);
     if(!isNaN(d)) {
       const monthKey = d.toLocaleString('default', { month: 'short', year: '2-digit' });
@@ -220,13 +194,11 @@ function processData(data) {
     }
   });
 
-  // Calculate derived metrics
   const netVal = totalInc - totalExp - household;
   const monthCount = Object.keys(monthlyData).length || 1;
   const avgMonthly = totalInc / monthCount;
   const savingsRate = totalInc > 0 ? ((netVal / totalInc) * 100).toFixed(1) : 0;
   
-  // Find best month
   let bestMonth = '---';
   let maxMonthIncome = 0;
   Object.entries(monthlyData).forEach(([month, income]) => {
@@ -236,61 +208,91 @@ function processData(data) {
     }
   });
 
-  // Update Dashboard - Main Cards
-  updateElement("totalIncome", "₹" + totalInc.toLocaleString('en-IN'));
-  updateElement("totalExpense", "₹" + totalExp.toLocaleString('en-IN'));
-  updateElement("householdTotal", "₹" + household.toLocaleString('en-IN'));
-  updateElement("net", "₹" + netVal.toLocaleString('en-IN'));
+  // Helper for currency formatting
+  const toINR = (v) => "₹" + Math.round(v).toLocaleString('en-IN');
+  const arecaNet = areca.inc - areca.exp;
+  const paddyNet = paddy.inc - paddy.exp;
+
+  // --- UI UPDATES ---
+
+  // Main Dashboard Cards
+  updateElement("totalIncome", toINR(totalInc));
+  updateElement("totalExpense", toINR(totalExp));
+  updateElement("householdTotal", toINR(household));
+  updateElement("net", toINR(netVal));
   
-  // Update header
+  // Header Badge Logic
   const headerNet = document.getElementById("headerNet");
-  if(headerNet) {
-    headerNet.textContent = "₹" + netVal.toLocaleString('en-IN');
-    headerNet.className = netVal >= 0 ? "text-lg font-bold text-emerald-600" : "text-lg font-bold text-red-500";
+  const headerBadge = document.getElementById("headerBadge");
+  if(headerNet && headerBadge) {
+    headerNet.textContent = toINR(netVal);
+    if(netVal >= 0) {
+        headerNet.className = "text-sm font-bold text-emerald-700 truncate block";
+        headerBadge.className = "bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50";
+    } else {
+        headerNet.className = "text-sm font-bold text-red-600 truncate block";
+        headerBadge.className = "bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50";
+    }
+  }
+
+  // Savings Rate Color
+  const savingsEl = document.getElementById("savingsRate");
+  if(savingsEl) {
+      savingsEl.textContent = savingsRate + "%";
+      savingsEl.className = parseFloat(savingsRate) >= 0 
+        ? "text-lg font-bold text-emerald-600 truncate" 
+        : "text-lg font-bold text-red-600 truncate";
   }
   
-  // Update farm-specific cards with detailed breakdown
-  updateElement("arecanutNet", "₹" + (areca.inc - areca.exp).toLocaleString('en-IN'));
-  updateElement("arecanutIncome", "₹" + areca.inc.toLocaleString('en-IN'));
-  updateElement("arecanutExpense", "₹" + areca.exp.toLocaleString('en-IN'));
+  // Arecanut Card Logic
+  updateElement("arecanutNet", toINR(arecaNet));
+  updateElement("arecanutIncome", toINR(areca.inc));
+  updateElement("arecanutExpense", toINR(areca.exp));
   
-  updateElement("paddyNet", "₹" + (paddy.inc - paddy.exp).toLocaleString('en-IN'));
-  updateElement("paddyIncome", "₹" + paddy.inc.toLocaleString('en-IN'));
-  updateElement("paddyExpense", "₹" + paddy.exp.toLocaleString('en-IN'));
+  const arecaNetEl = document.getElementById("arecanutNet");
+  if(arecaNetEl) {
+      arecaNetEl.className = arecaNet >= 0 
+        ? "font-mono font-bold text-sm bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100/50"
+        : "font-mono font-bold text-sm bg-red-50 text-red-600 px-2 py-1 rounded-md border border-red-100/50";
+  }
+
+  // Paddy Card Logic
+  updateElement("paddyNet", toINR(paddyNet));
+  updateElement("paddyIncome", toINR(paddy.inc));
+  updateElement("paddyExpense", toINR(paddy.exp));
+
+  const paddyNetEl = document.getElementById("paddyNet");
+  if(paddyNetEl) {
+      paddyNetEl.className = paddyNet >= 0 
+        ? "font-mono font-bold text-sm bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md border border-emerald-100/50"
+        : "font-mono font-bold text-sm bg-red-50 text-red-600 px-2 py-1 rounded-md border border-red-100/50";
+  }
   
-  // Update quick stats
-  updateElement("totalTransactions", totalTransactions);
-  updateElement("avgMonthly", "₹" + Math.round(avgMonthly).toLocaleString('en-IN'));
-  updateElement("bestMonth", bestMonth);
-  updateElement("savingsRate", savingsRate + "%");
-  
-  // Progress bars with percentages
+  // Progress Bars
   if(document.getElementById("arecaBar")) {
     let pAreca = areca.inc > 0 ? ((areca.inc - areca.exp) / areca.inc) * 100 : 0;
+    // Hide bar if negative, or full if positive. 
     pAreca = Math.max(0, Math.min(100, pAreca));
     document.getElementById("arecaBar").style.width = pAreca + "%";
-    updateElement("arecaPercent", Math.round(pAreca) + "%");
     
     let pPaddy = paddy.inc > 0 ? ((paddy.inc - paddy.exp) / paddy.inc) * 100 : 0;
     pPaddy = Math.max(0, Math.min(100, pPaddy));
     if(document.getElementById("paddyBar")) {
       document.getElementById("paddyBar").style.width = pPaddy + "%";
-      updateElement("paddyPercent", Math.round(pPaddy) + "%");
     }
   }
 
-  // Initialize analytics
-  if(typeof initAnalytics === 'function') {
-    initAnalytics();
-  }
+  updateElement("totalTransactions", totalTransactions);
+  updateElement("avgMonthly", toINR(avgMonthly));
+  updateElement("bestMonth", bestMonth);
 
-  // Render charts if on analytics tab
+  if(typeof initAnalytics === 'function') initAnalytics();
+  
   const analyticsSection = document.getElementById('analytics');
   if(analyticsSection && !analyticsSection.classList.contains('hidden') && typeof renderChartsAndAnalytics === 'function') {
     renderChartsAndAnalytics();
   }
 
-  // Render transaction logs
   renderLogsTable();
 }
 
@@ -305,9 +307,9 @@ function updateLogsView(view) {
     const btn = document.getElementById(`log-btn-${v}`);
     if(btn) {
       if(v === view) {
-        btn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md";
+        btn.className = "flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm transition-all";
       } else {
-        btn.className = "flex-1 py-2.5 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50";
+        btn.className = "flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500 transition-all";
       }
     }
   });
@@ -316,141 +318,70 @@ function updateLogsView(view) {
 }
 
 function renderLogsTable() {
-  const tbody = document.getElementById("recordsTableBody");
-  if(!tbody) return;
-  tbody.innerHTML = "";
+  const container = document.getElementById("recordsTableBody");
+  if(!container) return;
+  container.innerHTML = "";
 
-  // Filter data
   const filteredData = globalData.filter(item => {
     if(currentLogView === 'household') return item.type === 'household';
     return item.farm === currentLogView;
   });
 
-  // Sort by date (newest first)
   const sortedData = filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  // Empty state
   if(sortedData.length === 0) {
-    tbody.innerHTML = `
-      <tr><td colspan="4" class="block w-full p-12 text-center">
-        <div class="flex flex-col items-center gap-4">
-          <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-            <span class="text-4xl">📋</span>
-          </div>
-          <p class="text-slate-500 font-semibold">No records found for ${currentLogView}</p>
-          <button onclick="showTab('add')" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all">
-            Add First Entry
-          </button>
-        </div>
-      </td></tr>
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <p class="text-slate-400 font-medium text-xs">No records found for this period</p>
+      </div>
     `;
     return;
   }
 
-  // Render cards
   sortedData.forEach((r) => {
     const actualIndex = globalData.findIndex(item => item.originalIndex === r.originalIndex);
     
-    // Colors & formatting
-    let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-500' : 'text-amber-500');
+    let amtColor = r.type === 'income' ? 'text-emerald-600' : (r.type === 'expense' ? 'text-red-600' : 'text-blue-600');
     let sign = r.type === 'income' ? '+' : '-';
-    let bgGradient = r.type === 'income' ? 'from-emerald-50/50 to-white' : (r.type === 'expense' ? 'from-red-50/50 to-white' : 'from-amber-50/50 to-white');
+    let iconBg = r.type === 'income' ? 'bg-emerald-50' : (r.type === 'expense' ? 'bg-red-50' : 'bg-blue-50');
+    let iconColor = r.type === 'income' ? 'text-emerald-500' : (r.type === 'expense' ? 'text-red-500' : 'text-blue-500');
     
+    // SVG Icons
+    let iconSvg = '';
+    if(r.type === 'income') iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
+    else if(r.type === 'household') iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>';
+    else iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>';
+
     const dateObj = new Date(r.date);
-    const day = isNaN(dateObj) ? '00' : dateObj.getDate();
-    const month = isNaN(dateObj) ? '---' : dateObj.toLocaleString('default', { month: 'short' });
+    const dateStr = isNaN(dateObj) ? 'Invalid Date' : dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
-    const tr = document.createElement('tr');
-    tr.className = `block bg-gradient-to-br ${bgGradient} mb-4 rounded-2xl border-2 border-slate-200/60 shadow-md overflow-hidden transition-all hover:shadow-lg`;
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-3 active:scale-[0.99] transition-transform";
     
-    // Click handler for expanding notes
-    tr.onclick = function(e) {
-      if(e.target.closest('button')) return;
-
-      const notesDiv = this.querySelector('.notes-section');
-      const chevron = this.querySelector('.chevron-icon');
+    card.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 ${iconBg} ${iconColor} rounded-full flex items-center justify-center shrink-0">
+            ${iconSvg}
+          </div>
+          <div>
+            <h4 class="font-bold text-slate-800 text-sm leading-tight">${r.category}</h4>
+            <p class="text-xs text-slate-500 font-medium">${dateStr} ${r.quantity ? `• ${r.quantity}kg` : ''}</p>
+          </div>
+        </div>
+        <div class="${amtColor} font-bold text-base">
+          ${sign}₹${r.amount.toLocaleString('en-IN')}
+        </div>
+      </div>
       
-      if (notesDiv.classList.contains('hidden')) {
-        notesDiv.classList.remove('hidden');
-        notesDiv.classList.add('animate-fade-in');
-        chevron.style.transform = 'rotate(180deg)';
-        this.classList.add('ring-2', 'ring-emerald-500/50'); 
-      } else {
-        notesDiv.classList.add('hidden');
-        chevron.style.transform = 'rotate(0deg)';
-        this.classList.remove('ring-2', 'ring-emerald-500/50');
-      }
-    };
-
-    tr.innerHTML = `
-      <td class="block w-full p-0 border-none">
-        
-        <div class="p-5 relative cursor-pointer">
-          <div class="flex items-center justify-between gap-4">
-            
-            <!-- Date Badge -->
-            <div class="flex items-center gap-4 overflow-hidden">
-              <div class="flex flex-col items-center justify-center w-14 h-14 bg-white/80 backdrop-blur-sm border-2 border-slate-200 rounded-xl shrink-0 shadow-sm">
-                <span class="text-[10px] font-bold text-slate-400 uppercase leading-none">${month}</span>
-                <span class="text-xl font-bold text-slate-800 leading-none mt-0.5">${day}</span>
-              </div>
-              
-              <!-- Category Info -->
-              <div class="min-w-0">
-                <h4 class="text-slate-900 font-bold text-lg truncate leading-tight mb-1">${r.category}</h4>
-                <div class="flex items-center gap-2">
-                  ${r.quantity ? `<span class="px-2 py-0.5 bg-slate-100 rounded-md text-[10px] font-bold text-slate-600">${r.quantity} Kg</span>` : ''}
-                  <div class="flex items-center gap-1">
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-                      ${r.notes ? "Details" : "No Notes"}
-                    </span>
-                    <svg class="chevron-icon w-3 h-3 text-slate-300 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Amount -->
-            <div class="${amtColor} font-mono font-extrabold text-xl whitespace-nowrap shrink-0">
-              ${sign}₹${r.amount.toLocaleString('en-IN')}
-            </div>
-          </div>
-
-          <!-- Expandable Notes Section -->
-          <div class="notes-section hidden mt-5 pt-4 border-t border-dashed border-slate-300">
-            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-slate-200">
-              <p class="text-sm text-slate-700 leading-relaxed">
-                ${r.notes || '<span class="italic text-slate-400">No additional notes</span>'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex w-full border-t-2 border-slate-200/60">
-          
-          <button onclick="editEntry(${actualIndex})" 
-            class="w-1/2 py-4 flex items-center justify-center gap-2 text-slate-600 hover:text-emerald-600 hover:bg-white/80 transition-all active:scale-95 border-r-2 border-slate-200/60 font-bold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            <span class="text-xs uppercase tracking-wider">Edit</span>
-          </button>
-
-          <button onclick="deleteEntry(${actualIndex}, this)" 
-            class="w-1/2 py-4 flex items-center justify-center gap-2 text-slate-600 hover:text-red-500 hover:bg-white/80 transition-all active:scale-95 font-bold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span class="text-xs uppercase tracking-wider">Delete</span>
-          </button>
-
-        </div>
-      </td>
+      ${r.notes ? `<p class="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg">${r.notes}</p>` : ''}
+      
+      <div class="flex gap-2 pt-1">
+        <button onclick="editEntry(${actualIndex})" class="flex-1 py-1.5 text-[10px] font-bold text-slate-500 bg-slate-50 rounded hover:bg-slate-100">Edit</button>
+        <button onclick="deleteEntry(${actualIndex}, this)" class="flex-1 py-1.5 text-[10px] font-bold text-red-400 bg-red-50/50 rounded hover:bg-red-50">Delete</button>
+      </div>
     `;
-    tbody.appendChild(tr);
+    container.appendChild(card);
   });
 }
 
@@ -486,20 +417,17 @@ function editEntry(unsortedIndex) {
   
   const saveBtn = document.getElementById("saveBtn");
   saveBtn.textContent = "Update Entry";
-  
   document.getElementById("cancelEditBtn").classList.remove("hidden");
-  saveBtn.classList.remove("w-full");
-  saveBtn.classList.add("w-2/3");
 }
 
 function deleteEntry(unsortedIndex, btn) {
   const item = globalData[unsortedIndex];
   if(!item) return;
   
-  if(!confirm(`⚠️ Delete this entry?\n\nCategory: ${item.category}\nAmount: ₹${item.amount.toLocaleString('en-IN')}\n\nThis action cannot be undone.`)) return;
+  if(!confirm(`Delete this entry?\n${item.category} - ₹${item.amount}`)) return;
   
   const originalText = btn.innerHTML;
-  btn.innerHTML = '<div class="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>';
+  btn.innerHTML = '...';
   btn.disabled = true;
   
   const params = new URLSearchParams();
@@ -513,32 +441,21 @@ function deleteEntry(unsortedIndex, btn) {
     .then(r => r.json())
     .then(d => { 
       if(d.result === "success") { 
-        const row = btn.closest('tr');
-        if(row) {
-          row.style.transition = "all 0.3s";
-          row.style.opacity = "0";
-          row.style.transform = "scale(0.95)";
-          setTimeout(() => row.remove(), 300);
-        }
-        setTimeout(() => loadRemoteData(), 500);
-        showToast('Entry deleted successfully', 'success');
+        loadRemoteData();
+        showToast('Deleted', 'success');
       } else {
-        alert("Error: " + (d.error || "Unknown error"));
+        alert("Error");
         btn.innerHTML = originalText;
         btn.disabled = false;
       }
     })
     .catch(err => {
-      alert("Network Error: " + err);
+      alert("Network Error");
       btn.innerHTML = originalText;
       btn.disabled = false;
-      showToast('Delete failed. Please try again.', 'error');
     });
 }
 
-// ==================================
-// SAVE ENTRY
-// ==================================
 function saveEntry() {
   const saveBtn = document.getElementById("saveBtn");
   const type = document.getElementById("entryType").value;
@@ -546,24 +463,14 @@ function saveEntry() {
   const editIndex = document.getElementById("editRowIndex").value;
   const category = document.getElementById("category").value.trim();
 
-  if (amt <= 0) {
-    showToast('Please enter a valid amount', 'error');
-    return;
-  }
-  
-  if (!category) {
-    showToast('Please enter a category', 'error');
+  if (amt <= 0 || !category) {
+    showToast('Invalid Input', 'error');
     return;
   }
   
   const isEditing = (editIndex !== "" && editIndex !== null);
 
-  saveBtn.innerHTML = `
-    <div class="flex items-center justify-center gap-2">
-      <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-      <span>${isEditing ? 'Updating...' : 'Saving...'}</span>
-    </div>
-  `;
+  saveBtn.textContent = "Saving...";
   saveBtn.disabled = true;
 
   const params = new URLSearchParams();
@@ -589,18 +496,16 @@ function saveEntry() {
         resetForm();
         setTimeout(loadRemoteData, 500); 
         showTab('dashboard');
-        showToast(isEditing ? 'Entry updated successfully' : 'Entry added successfully', 'success');
+        showToast('Saved', 'success');
       } else {
-        alert("Error: " + d.error);
-        showToast('Operation failed. Please try again.', 'error');
+        alert("Error");
       }
     })
     .catch(err => {
-      alert("Request Failed: " + err);
-      showToast('Connection error. Please check your internet.', 'error');
+      alert("Failed");
     })
     .finally(() => { 
-      saveBtn.innerHTML = document.getElementById("formTitle").textContent === "New Entry" ? "Save Entry" : "Update Entry";
+      saveBtn.textContent = document.getElementById("formTitle").textContent === "New Entry" ? "Save Entry" : "Update Entry";
       saveBtn.disabled = false; 
     });
 }
@@ -617,45 +522,15 @@ function resetForm() {
   document.getElementById("entryType").value = "income";
   toggleInputs();
   
-  const saveBtn = document.getElementById("saveBtn");
-  saveBtn.textContent = "Save Entry";
-  
+  document.getElementById("saveBtn").textContent = "Save Entry";
   document.getElementById("cancelEditBtn").classList.add("hidden");
-  saveBtn.classList.remove("w-2/3");
-  saveBtn.classList.add("w-full");
 }
 
-// ==================================
-// TOAST NOTIFICATIONS
-// ==================================
-function showToast(message, type = 'info') {
-  const colors = {
-    success: 'bg-emerald-600',
-    error: 'bg-red-600',
-    info: 'bg-blue-600',
-    warning: 'bg-amber-600'
-  };
-  
-  const icons = {
-    success: '✓',
-    error: '✕',
-    info: 'ℹ',
-    warning: '⚠'
-  };
-  
+function showToast(message, type) {
+  const bg = type === 'success' ? 'bg-slate-800' : 'bg-red-600';
   const toast = document.createElement('div');
-  toast.className = `fixed bottom-24 left-1/2 -translate-x-1/2 ${colors[type]} text-white px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 font-semibold animate-slide-up`;
-  toast.innerHTML = `
-    <span class="text-xl">${icons[type]}</span>
-    <span>${message}</span>
-  `;
-  
+  toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 ${bg} text-white px-4 py-2 rounded-lg shadow-lg z-50 text-xs font-bold animate-slide-up`;
+  toast.textContent = message;
   document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.transition = 'all 0.3s';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translate(-50%, 20px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  setTimeout(() => toast.remove(), 2500);
 }

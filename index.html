@@ -3,23 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  <title>FarmLog Premium - Professional Farm Finance</title>
+  <title>FarmFinance Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     tailwind.config = {
       theme: { 
         extend: { 
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: { 
             slate: { 850: '#1e293b', 900: '#0f172a' },
             emerald: { 550: '#059669' }
           },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          animation: {
-            'slide-up': 'slideUp 0.3s ease-out',
-            'scale-in': 'scaleIn 0.2s ease-out',
+          boxShadow: {
+            'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
+            'nav': '0 -4px 6px -1px rgba(0, 0, 0, 0.02)'
           }
         } 
       }
@@ -28,435 +27,292 @@
   <link rel="stylesheet" href="styles.css"> 
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100 text-slate-900 font-sans antialiased min-h-screen flex flex-col pb-24">
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col pb-28 select-none">
 
-  <header class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 p-4 sticky top-0 z-50 shadow-lg">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div>
-          <h1 class="text-lg font-extrabold tracking-tight text-slate-900">
-            <span>🌾</span> <span class="hidden sm:inline">FarmFinance</span>
-            <span class="sm:hidden">FarmFinance</span>
-          </h1>
-          <p class="text-[10px] text-slate-500 font-semibold hidden sm:block">Professional Farm Management</p>
-        </div>
+  <header class="bg-white/80 backdrop-blur-md px-5 py-4 sticky top-0 z-40 border-b border-slate-100 flex justify-between items-center safe-area-top transition-all">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center border border-emerald-100 shadow-sm">
+        <span class="text-xl">🌾</span>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-2 rounded-xl border border-slate-200 shadow-inner">
-          <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Net Balance</p>
-          <p id="headerNet" class="text-lg font-bold text-emerald-600">₹0</p>
-        </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-slate-900 leading-tight">FarmFinance</h1>
+        <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider leading-none">Pro Dashboard</p>
       </div>
+    </div>
+    <div id="headerBadge" class="bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+      <span id="headerNet" class="text-sm font-bold text-slate-600 truncate max-w-[120px] block">₹0</span>
     </div>
   </header>
 
-  <main class="flex-1 p-4 max-w-6xl mx-auto w-full space-y-6">
+  <main class="flex-1 px-4 py-6 w-full max-w-lg mx-auto space-y-6">
 
-    <section id="dashboard" class="tab-content block animate-fade-in space-y-6">
+    <section id="dashboard" class="tab-content block animate-fade-in space-y-5">
       
-      <div class="relative bg-gradient-to-br from-white via-emerald-50/30 to-white p-8 rounded-3xl border border-slate-200/60 shadow-2xl overflow-hidden">
-        <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-emerald-100/50 to-transparent rounded-full blur-3xl -mr-24 -mt-24"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-100/50 to-transparent rounded-full blur-2xl -ml-16 -mb-16"></div>
+      <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-card relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
         
         <div class="relative z-10">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Live Balance</p>
-          </div>
-          <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6" id="net">₹0</h1>
+          <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Net Balance</p>
+          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-8 truncate" id="net">₹0</h1>
           
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-              <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-2">Total Income</span>
-              <p class="text-2xl font-bold text-emerald-600" id="totalIncome">₹0</p>
+          <div class="grid grid-cols-2 gap-6 border-t border-slate-800 pt-5">
+            <div>
+              <span class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium mb-1 uppercase tracking-wide">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+                Income
+              </span>
+              <p class="text-lg font-bold text-emerald-400 truncate" id="totalIncome">₹0</p>
             </div>
-            
-            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-              <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-2">Total Expense</span>
-              <p class="text-2xl font-bold text-red-500" id="totalExpense">₹0</p>
+            <div class="border-l border-slate-800 pl-6">
+              <span class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium mb-1 uppercase tracking-wide">
+                <svg class="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M20 12H4"/></svg>
+                Expense
+              </span>
+              <p class="text-lg font-bold text-red-400 truncate" id="totalExpense">₹0</p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="mt-4 inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl border border-amber-200 shadow-sm">
-            <span class="text-slate-600 text-xs uppercase font-bold">Household:</span>
-            <span id="householdTotal" class="text-slate-900 font-mono font-bold text-lg">₹0</span>
-          </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Household</p>
+          <p id="householdTotal" class="text-lg font-bold text-slate-800 truncate">₹0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Savings Rate</p>
+          <p id="savingsRate" class="text-lg font-bold text-emerald-600 truncate">0%</p>
         </div>
       </div>
 
       <div class="space-y-4">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest ml-1 flex items-center gap-2">
-            <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
-            Farm Performance
-          </h3>
-          <button onclick="showTab('analytics')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-            View Analytics
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide">Performance</h3>
+          <button onclick="showTab('analytics')" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">View Charts</button>
         </div>
-        
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all">
+
+        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-slate-900 font-bold text-lg">Arecanut Farm</h3>
-              <p class="text-xs text-slate-500 font-semibold">Primary Revenue Source</p>
+              <h4 class="font-bold text-slate-800 text-sm">Arecanut</h4>
+              <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">Primary Source</p>
             </div>
-            <div class="text-right">
-              <p class="text-xs text-slate-500 font-bold mb-1">NET PROFIT</p>
-              <span id="arecanutNet" class="text-slate-900 font-mono text-xl font-bold">₹0</span>
-            </div>
+            <span id="arecanutNet" class="font-mono font-bold text-sm px-2 py-1 rounded-md border">₹0</span>
           </div>
           
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-emerald-50 p-3 rounded-xl">
-              <p class="text-[10px] text-emerald-700 font-bold uppercase mb-1">Income</p>
-              <p id="arecanutIncome" class="text-emerald-900 font-bold text-lg">₹0</p>
-            </div>
-            <div class="bg-red-50 p-3 rounded-xl">
-              <p class="text-[10px] text-red-700 font-bold uppercase mb-1">Expense</p>
-              <p id="arecanutExpense" class="text-red-900 font-bold text-lg">₹0</p>
-            </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-4">
+            <div id="arecaBar" class="h-full bg-emerald-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
           </div>
           
-          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
-            <div id="arecaBar" class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-700 ease-out" style="width: 0%"></div>
-            <span id="arecaPercent" class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-600">0%</span>
+          <div class="flex justify-between text-xs text-slate-500 font-medium">
+            <span class="flex items-center gap-1">Inc: <span id="arecanutIncome" class="text-slate-700 font-bold">₹0</span></span>
+            <span class="flex items-center gap-1">Exp: <span id="arecanutExpense" class="text-slate-700 font-bold">₹0</span></span>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all">
+        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-slate-900 font-bold text-lg">Paddy Farm</h3>
-              <p class="text-xs text-slate-500 font-semibold">Secondary Revenue</p>
+              <h4 class="font-bold text-slate-800 text-sm">Paddy</h4>
+              <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">Secondary Source</p>
             </div>
-            <div class="text-right">
-              <p class="text-xs text-slate-500 font-bold mb-1">NET PROFIT</p>
-              <span id="paddyNet" class="text-slate-900 font-mono text-xl font-bold">₹0</span>
-            </div>
+            <span id="paddyNet" class="font-mono font-bold text-sm px-2 py-1 rounded-md border">₹0</span>
           </div>
           
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-emerald-50 p-3 rounded-xl">
-              <p class="text-[10px] text-emerald-700 font-bold uppercase mb-1">Income</p>
-              <p id="paddyIncome" class="text-emerald-900 font-bold text-lg">₹0</p>
-            </div>
-            <div class="bg-red-50 p-3 rounded-xl">
-              <p class="text-[10px] text-red-700 font-bold uppercase mb-1">Expense</p>
-              <p id="paddyExpense" class="text-red-900 font-bold text-lg">₹0</p>
-            </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-4">
+            <div id="paddyBar" class="h-full bg-amber-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
           </div>
           
-          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
-            <div id="paddyBar" class="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-700 ease-out" style="width: 0%"></div>
-            <span id="paddyPercent" class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-600">0%</span>
+          <div class="flex justify-between text-xs text-slate-500 font-medium">
+            <span class="flex items-center gap-1">Inc: <span id="paddyIncome" class="text-slate-700 font-bold">₹0</span></span>
+            <span class="flex items-center gap-1">Exp: <span id="paddyExpense" class="text-slate-700 font-bold">₹0</span></span>
           </div>
         </div>
       </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 rounded-2xl border border-blue-200 shadow-sm">
-          <p class="text-[10px] text-blue-700 uppercase font-bold tracking-wider mb-1">Transactions</p>
-          <p id="totalTransactions" class="text-2xl font-bold text-blue-900">0</p>
-        </div>
-
-        <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-2xl border border-purple-200 shadow-sm">
-          <p class="text-[10px] text-purple-700 uppercase font-bold tracking-wider mb-1">Avg Monthly</p>
-          <p id="avgMonthly" class="text-2xl font-bold text-purple-900">₹0</p>
-        </div>
-
-        <div class="bg-gradient-to-br from-pink-50 to-pink-100/50 p-4 rounded-2xl border border-pink-200 shadow-sm">
-          <p class="text-[10px] text-pink-700 uppercase font-bold tracking-wider mb-1">Best Month</p>
-          <p id="bestMonth" class="text-2xl font-bold text-pink-900">---</p>
-        </div>
-
-        <div class="bg-gradient-to-br from-teal-50 to-teal-100/50 p-4 rounded-2xl border border-teal-200 shadow-sm">
-          <p class="text-[10px] text-teal-700 uppercase font-bold tracking-wider mb-1">Savings Rate</p>
-          <p id="savingsRate" class="text-2xl font-bold text-teal-900">0%</p>
-        </div>
+      
+      <div class="hidden">
+        <span id="totalTransactions">0</span>
+        <span id="avgMonthly">0</span>
+        <span id="bestMonth">---</span>
       </div>
-
     </section>
 
-    <section id="add" class="tab-content hidden">
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-2xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-100/30 to-transparent rounded-full blur-2xl"></div>
-        
-        <input type="hidden" id="editRowIndex" value="">
-        
-        <div class="space-y-6 relative z-10">
-          <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 id="formTitle" class="text-2xl font-bold text-slate-900">New Entry</h2>
-          </div>
-          
-          <div>
-            <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Entry Type</label>
-            <select id="entryType" onchange="toggleInputs()" class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold transition-all">
-              <option value="income">Farm Income</option>
-              <option value="expense">Farm Expense</option>
-              <option value="household">Household Expense</option>
-            </select>
-          </div>
+    <section id="add" class="tab-content hidden space-y-5">
+      <div class="bg-white p-6 rounded-2xl shadow-card border border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="formTitle" class="text-lg font-bold text-slate-900">New Entry</h2>
+            <input type="hidden" id="editRowIndex" value="">
+        </div>
 
-          <div id="farmGroup">
-            <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Farm Source</label>
-            <select id="farmType" class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold transition-all">
-              <option value="arecanut">Arecanut</option>
-              <option value="paddy">Paddy</option>
-              <option value="other">General</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Date</label>
-              <input type="date" id="date" class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold" />
+        <div class="space-y-6">
+            <div class="bg-slate-50 p-1.5 rounded-xl flex border border-slate-100">
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="entryTypeSelect" value="income" class="peer hidden" checked onchange="document.getElementById('entryType').value='income'; toggleInputs();">
+                    <div class="text-center py-2.5 text-xs font-bold rounded-lg text-slate-500 peer-checked:bg-white peer-checked:text-emerald-700 peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-slate-100">Income</div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="entryTypeSelect" value="expense" class="peer hidden" onchange="document.getElementById('entryType').value='expense'; toggleInputs();">
+                    <div class="text-center py-2.5 text-xs font-bold rounded-lg text-slate-500 peer-checked:bg-white peer-checked:text-red-600 peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-slate-100">Expense</div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="entryTypeSelect" value="household" class="peer hidden" onchange="document.getElementById('entryType').value='household'; toggleInputs();">
+                    <div class="text-center py-2.5 text-xs font-bold rounded-lg text-slate-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all border border-transparent peer-checked:border-slate-100">Home</div>
+                </label>
             </div>
+            
+            <select id="entryType" class="hidden"><option value="income">Income</option><option value="expense">Expense</option><option value="household">Household</option></select>
+
             <div>
-              <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Category</label>
-              <input list="catList" id="category" placeholder="e.g. Labor, Sales..." class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold" />
-              <datalist id="catList">
-                <option value="Labor">
-                <option value="Fertilizer">
-                <option value="Sales">
-                <option value="Transport">
-                <option value="Seeds">
-                <option value="Pesticides">
-                <option value="Maintenance">
-                <option value="Groceries">
-                <option value="Utilities">
-              </datalist>
+                <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Amount</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl font-medium">₹</span>
+                    <input type="number" id="amount" placeholder="0" class="w-full pl-10 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-2xl font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder:text-slate-300">
+                </div>
             </div>
-          </div>
 
-          <div id="incomeInputs" class="grid grid-cols-2 gap-4 p-5 bg-gradient-to-br from-emerald-50 to-emerald-100/30 border-2 border-emerald-200 rounded-2xl hidden">
+            <div id="farmGroup">
+                <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Source / Farm</label>
+                <div class="relative">
+                  <select id="farmType" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-sm focus:ring-2 focus:ring-slate-900 outline-none appearance-none">
+                      <option value="arecanut">Arecanut Farm</option>
+                      <option value="paddy">Paddy Farm</option>
+                      <option value="other">General / Other</option>
+                  </select>
+                  <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Date</label>
+                    <input type="date" id="date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Category</label>
+                    <input list="catList" id="category" placeholder="Select..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none">
+                    <datalist id="catList">
+                        <option value="Labor"><option value="Fertilizer"><option value="Sales"><option value="Transport"><option value="Seeds"><option value="Pesticides"><option value="Utilities"><option value="Groceries">
+                    </datalist>
+                </div>
+            </div>
+
+            <div id="incomeInputs" class="hidden bg-emerald-50 p-4 rounded-xl border border-emerald-100/50">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wide mb-1.5">Quantity (Kg)</label>
+                        <input type="number" id="quantity" class="w-full p-2.5 bg-white border border-emerald-200 rounded-lg text-sm font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wide mb-1.5">Rate (₹/Kg)</label>
+                        <input type="number" id="rate" class="w-full p-2.5 bg-white border border-emerald-200 rounded-lg text-sm font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
             <div>
-                <label class="block text-xs text-emerald-700 mb-2 font-bold">Quantity (Kg)</label>
-                <input type="number" id="quantity" placeholder="0" class="w-full bg-white border-2 border-emerald-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 font-semibold shadow-sm" />
+                <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Notes</label>
+                <textarea id="notes" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-slate-900 outline-none resize-none" placeholder="Details..."></textarea>
             </div>
-            <div>
-                <label class="block text-xs text-emerald-700 mb-2 font-bold">Rate (₹/Kg)</label>
-                <input type="number" id="rate" placeholder="0" class="w-full bg-white border-2 border-emerald-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 font-semibold shadow-sm" />
+
+            <div class="pt-2 flex gap-3">
+                 <button id="cancelEditBtn" onclick="resetForm()" class="hidden w-1/3 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl text-sm">Cancel</button>
+                 <button id="saveBtn" onclick="saveEntry()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl text-sm shadow-lg shadow-slate-900/20 active:scale-[0.98] transition-all">Save Entry</button>
             </div>
-          </div>
-
-          <div>
-             <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Amount</label>
-             <div class="relative">
-                 <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-2xl">₹</span>
-                 <input type="number" id="amount" placeholder="0" class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-2xl py-5 pl-12 pr-5 text-3xl font-bold text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
-             </div>
-          </div>
-
-          <div>
-            <label class="block text-xs text-slate-600 mb-2 uppercase font-bold tracking-wider">Notes (Optional)</label>
-            <textarea id="notes" rows="3" placeholder="Add additional details..." class="w-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none font-medium"></textarea>
-          </div>
-
-          <div class="flex gap-3 pt-2">
-              <button id="cancelEditBtn" onclick="resetForm()" class="hidden w-1/3 bg-slate-100 hover:bg-slate-200 py-4 rounded-xl font-bold text-sm text-slate-700 transition-all active:scale-95">
-                Cancel
-              </button>
-              <button id="saveBtn" onclick="saveEntry()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 py-5 rounded-xl font-bold text-lg text-white shadow-xl active:scale-95 transition-all">
-                Save Entry
-              </button>
-          </div>
         </div>
       </div>
     </section>
 
     <section id="analytics" class="tab-content hidden space-y-6">
-  
-      <div class="flex flex-col sm:flex-row gap-4 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-slate-200 shadow-lg">
-        <div class="flex bg-slate-100 p-1.5 rounded-xl flex-1">
-          <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2.5 px-4 text-xs font-bold rounded-lg transition-all bg-white text-emerald-600 shadow-md">Arecanut</button>
-          <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2.5 px-4 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">Paddy</button>
-          <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2.5 px-4 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">Home</button>
-        </div>
-        
-        <div class="relative min-w-[140px]">
-          <select id="yearSelect" onchange="handleYearChange()" class="w-full bg-white border-2 border-slate-200 text-slate-900 text-sm font-bold rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3 outline-none appearance-none pr-10">
-            <option value="all">All Time</option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-5 rounded-2xl border border-emerald-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all">
-          <div class="absolute right-0 top-0 w-20 h-20 bg-emerald-200/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-          <div class="relative z-10">
-            <p class="text-[10px] uppercase font-bold text-emerald-700 tracking-wider mb-2">Net Profit</p>
-            <h3 class="text-2xl font-extrabold text-slate-900 mb-1" id="kpi-net">₹0</h3>
-            <p class="text-[10px] text-emerald-600 font-semibold">Total Period</p>
-          </div>
+        <div class="flex gap-3">
+            <div class="flex bg-slate-100 p-1 rounded-lg flex-1 border border-slate-200">
+                <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm">Areca</button>
+                <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Paddy</button>
+                <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Home</button>
+            </div>
+            <select id="yearSelect" onchange="handleYearChange()" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 outline-none focus:border-slate-400">
+                <option value="all">All Time</option>
+            </select>
         </div>
 
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 p-5 rounded-2xl border border-blue-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all">
-          <div class="absolute right-0 top-0 w-20 h-20 bg-blue-200/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-          <div class="relative z-10">
-            <p class="text-[10px] uppercase font-bold text-blue-700 tracking-wider mb-2">Avg. Income</p>
-            <h3 class="text-2xl font-extrabold text-slate-900 mb-1" id="kpi-avg">₹0</h3>
-            <p class="text-[10px] text-blue-600 font-semibold">Per Month</p>
-          </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Net Profit</p>
+                <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-net">₹0</h3>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Profit Margin</p>
+                <h3 class="text-xl font-bold text-emerald-600 truncate" id="kpi-margin">0%</h3>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Avg Income</p>
+                <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-avg">₹0</h3>
+            </div>
+             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Top Expense</p>
+                <h3 class="text-sm font-bold text-slate-900 truncate" id="kpi-exp">---</h3>
+                <p class="text-xs text-slate-500 font-medium truncate" id="kpi-exp-val">₹0</p>
+            </div>
         </div>
 
-        <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 p-5 rounded-2xl border border-amber-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all">
-          <div class="absolute right-0 top-0 w-20 h-20 bg-amber-200/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-          <div class="relative z-10">
-            <p class="text-[10px] uppercase font-bold text-amber-700 tracking-wider mb-2">Top Expense</p>
-            <h3 class="text-lg font-extrabold text-slate-900 mb-1 truncate" id="kpi-exp">---</h3>
-            <p class="text-[10px] text-amber-600 font-semibold" id="kpi-exp-val">₹0</p>
-          </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
+            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Cash Flow</h4>
+            <div class="h-64 relative w-full bg-white"><canvas id="trendChart"></canvas></div>
         </div>
 
-        <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 p-5 rounded-2xl border border-purple-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all">
-          <div class="absolute right-0 top-0 w-20 h-20 bg-purple-200/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-          <div class="relative z-10">
-            <p class="text-[10px] uppercase font-bold text-purple-700 tracking-wider mb-2">Profit Margin</p>
-            <h3 class="text-2xl font-extrabold text-slate-900 mb-1" id="kpi-margin">0%</h3>
-            <p class="text-[10px] text-purple-600 font-semibold">Efficiency</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md">
-          <p class="text-xs text-slate-500 font-bold uppercase mb-2">Monthly Avg Expense</p>
-          <p class="text-2xl font-bold text-slate-900" id="kpi-avg-expense">₹0</p>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md">
-          <p class="text-xs text-slate-500 font-bold uppercase mb-2">Total Transactions</p>
-          <p class="text-2xl font-bold text-slate-900" id="kpi-total-transactions">0</p>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md">
-          <p class="text-xs text-slate-500 font-bold uppercase mb-2">Months Tracked</p>
-          <p class="text-2xl font-bold text-slate-900" id="kpi-months-tracked">0</p>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-            <span class="w-1 h-5 bg-emerald-500 rounded-full"></span>
-            Financial Trend
-          </h3>
-          <span class="text-[10px] font-bold px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">Monthly View</span>
-        </div>
-        <div class="h-72"><canvas id="trendChart"></canvas></div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg">
-          <h3 class="text-sm font-bold mb-6 text-slate-800 uppercase tracking-wide flex items-center gap-2">
-            <span class="w-1 h-5 bg-amber-500 rounded-full"></span>
-            Spending Distribution
-          </h3>
-          <div class="h-72"><canvas id="categoryChart"></canvas></div>
+        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
+            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Expense Split</h4>
+            <div class="h-64 relative w-full bg-white"><canvas id="categoryChart"></canvas></div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg">
-          <h3 class="text-sm font-bold mb-6 text-slate-800 uppercase tracking-wide flex items-center gap-2">
-            <span class="w-1 h-5 bg-purple-500 rounded-full"></span>
-            Cumulative Profit
-          </h3>
-          <div class="h-72"><canvas id="profitChart"></canvas></div>
+        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
+            <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Growth Trajectory</h4>
+            <div class="h-64 relative w-full bg-white"><canvas id="profitChart"></canvas></div>
         </div>
-
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg">
-        <h3 class="text-sm font-bold mb-6 text-slate-800 uppercase tracking-wide flex items-center gap-2">
-          <span class="w-1 h-5 bg-blue-500 rounded-full"></span>
-          Monthly Profit Trend
-        </h3>
-        <div class="h-64"><canvas id="comparisonChart"></canvas></div>
-      </div>
-
     </section>
 
     <section id="records" class="tab-content hidden">
-      <div class="flex justify-between items-center mb-6 sticky top-16 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100 z-10 py-3 backdrop-blur-sm rounded-2xl px-4 border border-slate-200 shadow-sm">
-        <h2 class="font-extrabold text-2xl text-slate-900">
-          Transaction History
-        </h2>
-        <button onclick="loadRemoteData()" class="bg-white hover:bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-xl border-2 border-emerald-200 text-xs font-bold shadow-md transition-all flex items-center gap-2 hover:shadow-lg active:scale-95">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-          </svg>
-          Refresh
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-slate-900">Transaction History</h2>
+        <button onclick="loadRemoteData()" class="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-emerald-600 shadow-sm transition-colors">
+           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </button>
       </div>
 
-      <div class="flex bg-white/80 backdrop-blur-sm p-2 rounded-2xl border-2 border-slate-200 shadow-lg mb-6">
-        <button onclick="updateLogsView('arecanut')" id="log-btn-arecanut" class="flex-1 py-3 text-xs font-bold rounded-xl transition-all bg-emerald-600 text-white shadow-md">Arecanut</button>
-        <button onclick="updateLogsView('paddy')" id="log-btn-paddy" class="flex-1 py-3 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">Paddy</button>
-        <button onclick="updateLogsView('household')" id="log-btn-household" class="flex-1 py-3 text-xs font-bold rounded-xl transition-all text-slate-500 hover:bg-slate-50">Household</button>
+      <div class="flex bg-slate-100 p-1 rounded-lg mb-6 border border-slate-200">
+        <button onclick="updateLogsView('arecanut')" id="log-btn-arecanut" class="flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm">Areca</button>
+        <button onclick="updateLogsView('paddy')" id="log-btn-paddy" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Paddy</button>
+        <button onclick="updateLogsView('household')" id="log-btn-household" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Home</button>
       </div>
-      
+
       <div class="w-full">
-        <table class="w-full border-collapse" id="recordsTable">
-          <thead class="bg-gradient-to-r from-slate-100 to-slate-50 text-slate-600 uppercase text-[11px] hidden sm:table-header-group border-b-2 border-slate-200 rounded-t-2xl">
-            <tr>
-              <th class="p-4 text-left font-bold tracking-wider">Date</th>
-              <th class="p-4 text-left font-bold tracking-wider">Category</th>
-              <th class="p-4 text-right font-bold tracking-wider">Amount</th>
-              <th class="p-4 text-center font-bold tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="recordsTableBody" class="divide-y divide-slate-100">
-            </tbody>
-        </table>
+        <div id="recordsTableBody" class="space-y-3"></div>
       </div>
     </section>
 
   </main>
 
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t-2 border-slate-200 px-6 py-4 z-50 flex justify-around items-center shadow-2xl">
-    
-    <button onclick="showTab('dashboard')" class="nav-btn-mobile flex flex-col items-center gap-1.5 w-20 group active text-emerald-500 transition-all">
-      <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7 group-hover:scale-110 transition-transform">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-        </svg>
-      </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider">Home</span>
-    </button>
-    
-    <button onclick="showTab('add')" class="nav-btn-mobile flex flex-col items-center gap-1.5 w-20 group text-slate-400 transition-all">
-      <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7 group-hover:scale-110 transition-transform">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-      </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider">Add</span>
-    </button>
-    
-    <button onclick="showTab('analytics')" class="nav-btn-mobile flex flex-col items-center gap-1.5 w-20 group text-slate-400 transition-all">
-      <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7 group-hover:scale-110 transition-transform">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-        </svg>
-      </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider">Stats</span>
-    </button>
-    
-    <button onclick="showTab('records')" class="nav-btn-mobile flex flex-col items-center gap-1.5 w-20 group text-slate-400 transition-all">
-      <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7 group-hover:scale-110 transition-transform">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-      </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider">Logs</span>
-    </button>
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 pb-safe z-50 shadow-nav">
+    <div class="flex justify-around items-center h-16">
+        <button onclick="showTab('dashboard')" class="nav-btn-mobile w-full h-full flex flex-col items-center justify-center gap-1.5 text-emerald-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button onclick="showTab('add')" class="nav-btn-mobile w-full h-full flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-slate-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span class="text-[10px] font-bold">Add</span>
+        </button>
+        <button onclick="showTab('analytics')" class="nav-btn-mobile w-full h-full flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-slate-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span class="text-[10px] font-bold">Stats</span>
+        </button>
+        <button onclick="showTab('records')" class="nav-btn-mobile w-full h-full flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-slate-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span class="text-[10px] font-bold">Logs</span>
+        </button>
+    </div>
   </nav>
 
   <script src="chart.js"></script>
