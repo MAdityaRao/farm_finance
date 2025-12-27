@@ -51,6 +51,7 @@ function showTab(id) {
       setTimeout(() => renderChartsAndAnalytics(), 50);
     }
   }
+  
 }
 
 function toggleInputs() {

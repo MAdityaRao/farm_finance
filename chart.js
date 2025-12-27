@@ -1,11 +1,8 @@
 // ============================================================
-// ADVANCED ANALYTICS ENGINE - FIXED FOR HOUSEHOLD/PODDY
-// ============================================================
 
 let chartInstances = {};
 let currentView = 'overall';
 let currentYear = 'all';
-let availableYears = [];
 let analyticsData = {}; 
 
 // ============================================================
@@ -23,7 +20,8 @@ function initAnalytics() {
     }).filter(y => y !== null));
     
     years.add(new Date().getFullYear());
-    availableYears = Array.from(years).sort((a,b) => b - a);
+    // Sort years descending
+    const availableYears = Array.from(years).sort((a,b) => b - a);
     
     populateYearSelector(availableYears);
     renderChartsAndAnalytics();
@@ -34,7 +32,7 @@ function populateYearSelector(years) {
     if(!yearSelect) return;
     
     const current = yearSelect.value;
-    yearSelect.innerHTML = '<option value="all">All</option>';
+    yearSelect.innerHTML = '<option value="all">All Time</option>';
     years.forEach(y => {
         const opt = document.createElement('option');
         opt.value = y.toString();
@@ -64,9 +62,13 @@ function updateAnalyticsView(view) {
     views.forEach(v => {
         const btn = document.getElementById(`btn-${v}`);
         if(btn) {
-            btn.className = v === view
-                ? 'px-4 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm whitespace-nowrap transition-all'
-                : 'px-4 py-2 text-[11px] font-bold rounded-md text-slate-500 whitespace-nowrap transition-all';
+            // Responsive classes: Grid style on mobile, Tab style on desktop
+            const isActive = v === view;
+            const baseClass = "flex-1 sm:flex-none px-4 py-2 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap";
+            
+            btn.className = isActive
+                ? `${baseClass} bg-white text-slate-900 shadow-sm ring-1 ring-slate-200`
+                : `${baseClass} text-slate-500 hover:text-slate-700 hover:bg-slate-50/50`;
         }
     });
     
@@ -74,7 +76,7 @@ function updateAnalyticsView(view) {
 }
 
 // ============================================================
-// MAIN RENDERING FUNCTION
+// MAIN RENDERING
 // ============================================================
 function renderChartsAndAnalytics() {
     if (typeof globalData === 'undefined' || !globalData || globalData.length === 0) {
@@ -82,14 +84,16 @@ function renderChartsAndAnalytics() {
         return;
     }
     
+    // 1. Filter Data
     const filteredData = globalData.filter(item => {
-        // FIX: Broad filter for Household data
+        // View Filter
         if (currentView === 'household') {
             if (item.type !== 'household' && item.farm !== 'household') return false;
         } else if (currentView !== 'overall') {
             if (item.farm !== currentView) return false;
         }
 
+        // Year Filter
         if(currentYear === 'all') return true;
         const d = new Date(item.date);
         return !isNaN(d.getTime()) && d.getFullYear().toString() === currentYear.toString();
@@ -100,20 +104,21 @@ function renderChartsAndAnalytics() {
         return;
     }
 
+    // 2. Process Data
     analyticsData = processAdvancedAnalytics(filteredData);
     
+    // 3. Update UI
     updateKPICards(analyticsData.metrics);
     updateMonthlyBreakdown(analyticsData.monthlyStats);
     
     if (typeof Chart !== 'undefined') {
-        renderTrendChart('trendChart', analyticsData);
         renderCategoryChart('categoryChart', analyticsData);
         renderSeasonalChart('seasonalChart', analyticsData);
     }
 }
 
 // ============================================================
-// DATA PROCESSING ENGINE
+// DATA PROCESSING
 // ============================================================
 function processAdvancedAnalytics(data) {
     const result = {
@@ -131,52 +136,56 @@ function processAdvancedAnalytics(data) {
         const date = new Date(item.date);
         if (isNaN(date.getTime())) return;
 
-        const monthKey = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+        // Use 'YYYY-MM' as key for sorting, 'MMM YY' for display
+        const sortKey = date.toISOString().slice(0, 7); // 2025-05
+        const displayKey = date.toLocaleString('default', { month: 'short', year: '2-digit' }); // May 25
         
-        if (!result.monthlyStats[monthKey]) {
-            result.monthlyStats[monthKey] = { 
-                income: 0, expense: 0, household: 0, profit: 0, rawDate: date 
+        if (!result.monthlyStats[sortKey]) {
+            result.monthlyStats[sortKey] = { 
+                label: displayKey,
+                income: 0, expense: 0, household: 0, profit: 0, 
+                rawDate: new Date(date.getFullYear(), date.getMonth(), 1) 
             };
         }
 
         const amount = item.amount || 0;
-
-        if (item.type === 'income') {
-            result.monthlyStats[monthKey].income += amount;
-            totalIncome += amount;
-            
-            const season = getSeason(date.getMonth());
-            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
-            result.seasonalPatterns[season].income += amount;
-
-        } else if (item.type === 'expense') {
-            result.monthlyStats[monthKey].expense += amount;
-            totalExpense += amount;
-            
-            const cat = item.category || 'Uncategorized';
-            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
-            
-            const season = getSeason(date.getMonth());
-            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
-            result.seasonalPatterns[season].expense += amount;
-
-        } else if (item.type === 'household' || item.farm === 'household') {
-            result.monthlyStats[monthKey].household += amount;
-            totalHousehold += amount;
-            
-            // FIX: Add Household to Category Map so Pie Chart works
-            const cat = item.category || 'General';
-            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
-            
-            const season = getSeason(date.getMonth());
-            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
-            result.seasonalPatterns[season].household += amount;
+        const cat = item.category || 'General';
+        const season = getSeason(date.getMonth());
+        
+        if(!result.seasonalPatterns[season]) {
+            result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
         }
 
-        result.monthlyStats[monthKey].profit = 
-            result.monthlyStats[monthKey].income - result.monthlyStats[monthKey].expense - result.monthlyStats[monthKey].household;
+        // Logic Order: Household -> Income -> Expense
+        if (item.type === 'household' || item.farm === 'household') {
+            result.monthlyStats[sortKey].household += amount;
+            totalHousehold += amount;
+            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
+            result.seasonalPatterns[season].household += amount;
+        } 
+        else if (item.type === 'income') {
+            result.monthlyStats[sortKey].income += amount;
+            totalIncome += amount;
+            
+            // For Farm views, track income sources in category chart
+            if (currentView !== 'household' && currentView !== 'overall') {
+                 const incomeCat = `(Inc) ${cat}`;
+                 result.categoryMap[incomeCat] = (result.categoryMap[incomeCat] || 0) + amount;
+            }
+            result.seasonalPatterns[season].income += amount;
+        } 
+        else if (item.type === 'expense') {
+            result.monthlyStats[sortKey].expense += amount;
+            totalExpense += amount;
+            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
+            result.seasonalPatterns[season].expense += amount;
+        }
+
+        result.monthlyStats[sortKey].profit = 
+            result.monthlyStats[sortKey].income - result.monthlyStats[sortKey].expense - result.monthlyStats[sortKey].household;
     });
 
+    // Metrics Calculation
     const netProfit = totalIncome - totalExpense - totalHousehold;
     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome * 100) : 0;
     const roi = (totalExpense + totalHousehold) > 0 ? (netProfit / (totalExpense + totalHousehold) * 100) : 0;
@@ -205,137 +214,6 @@ function getSeason(month) {
 // ============================================================
 // CHART RENDERING
 // ============================================================
-function renderTrendChart(canvasId, data) {
-    const ctx = document.getElementById(canvasId);
-    if (!ctx) return;
-    
-    if (chartInstances.trend) chartInstances.trend.destroy();
-    
-    const months = Object.keys(data.monthlyStats).sort((a, b) => {
-        return data.monthlyStats[a].rawDate - data.monthlyStats[b].rawDate;
-    });
-
-    const incomeData = months.map(m => data.monthlyStats[m].income);
-    const expenseData = months.map(m => data.monthlyStats[m].expense);
-    const householdData = months.map(m => data.monthlyStats[m].household);
-    const profitData = months.map(m => data.monthlyStats[m].profit);
-    
-    const trendType = document.getElementById('trendType')?.value || 'income_expense';
-    
-    let datasets = [];
-    
-    if (trendType === 'income_expense') {
-        if (currentView === 'household') {
-            // FIX: Only show Household line for Home View
-            datasets = [{
-                label: 'Household Spend',
-                data: householdData,
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderColor: 'rgb(59, 130, 246)',
-                borderWidth: 2,
-                pointRadius: 4, // Bigger dots for visibility
-                fill: true,
-                tension: 0.3
-            }];
-        } else if (currentView === 'overall') {
-            datasets = [
-                {
-                    label: 'Income',
-                    data: incomeData,
-                    borderColor: 'rgb(16, 185, 129)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Expense',
-                    data: expenseData,
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Household',
-                    data: householdData,
-                    borderColor: 'rgb(59, 130, 246)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    borderDash: [5, 5],
-                    tension: 0.3,
-                    fill: false
-                }
-            ];
-        } else {
-            // FIX: Hide Household for Farm Views (Paddy/Areca)
-            datasets = [
-                {
-                    label: 'Income',
-                    data: incomeData,
-                    borderColor: 'rgb(16, 185, 129)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Expense',
-                    data: expenseData,
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: true
-                }
-            ];
-        }
-    } else if (trendType === 'profit') {
-        datasets = [{
-            label: 'Net Profit',
-            data: profitData,
-            backgroundColor: 'rgba(139, 92, 246, 0.2)',
-            borderColor: 'rgb(139, 92, 246)',
-            borderWidth: 2,
-            pointRadius: 4,
-            fill: true,
-            tension: 0.3
-        }];
-    } else {
-        let cumulative = 0;
-        const cumulativeData = profitData.map(p => { cumulative += p; return cumulative; });
-        datasets = [{
-            label: 'Cumulative',
-            data: cumulativeData,
-            backgroundColor: 'rgba(245, 158, 11, 0.2)',
-            borderColor: 'rgb(245, 158, 11)',
-            borderWidth: 2,
-            pointRadius: 4,
-            fill: true,
-            tension: 0.3
-        }];
-    }
-    
-    chartInstances.trend = new Chart(ctx, {
-        type: 'line',
-        data: { labels: months, datasets: datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
-            scales: {
-                y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) } },
-                x: { ticks: { font: { size: 9 } } }
-            }
-        }
-    });
-}
 
 function renderCategoryChart(canvasId, data) {
     const ctx = document.getElementById(canvasId);
@@ -351,7 +229,7 @@ function renderCategoryChart(canvasId, data) {
         chartInstances.category = new Chart(ctx, {
             type: 'doughnut',
             data: { labels: ['No Data'], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'], borderWidth: 0 }] },
-            options: { plugins: { tooltip: { enabled: false }, legend: { display: false } }, cutout: '70%' }
+            options: { plugins: { tooltip: { enabled: false }, legend: { display: false } }, cutout: '75%' }
         });
         return;
     }
@@ -366,14 +244,18 @@ function renderCategoryChart(canvasId, data) {
                     '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
                     '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'
                 ],
-                borderWidth: 1,
-                borderColor: '#ffffff'
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }
+            plugins: { 
+                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 }, padding: 10 } } 
+            },
+            cutout: '70%'
         }
     });
 }
@@ -391,11 +273,11 @@ function renderSeasonalChart(canvasId, data) {
     
     let datasets = [];
     if(currentView === 'household') {
-         datasets = [{ label: 'Household', data: householdData, backgroundColor: '#3b82f6', borderRadius: 4 }];
+         datasets = [{ label: 'Household', data: householdData, backgroundColor: '#3b82f6', borderRadius: 4, barPercentage: 0.6 }];
     } else {
          datasets = [
-            { label: 'Income', data: incomeData, backgroundColor: '#10b981', borderRadius: 4 },
-            { label: 'Expense', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
+            { label: 'Income', data: incomeData, backgroundColor: '#10b981', borderRadius: 4, barPercentage: 0.6 },
+            { label: 'Expense', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4, barPercentage: 0.6 }
          ];
     }
     
@@ -405,9 +287,17 @@ function renderSeasonalChart(canvasId, data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: { 
-                y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) } },
-                x: { ticks: { font: { size: 9 } } }
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: '#f1f5f9' },
+                    ticks: { font: { size: 9 }, callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) } 
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { font: { size: 9 } } 
+                }
             }
         }
     });
@@ -421,9 +311,11 @@ function updateKPICards(metrics) {
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
 
     set('kpi-net', formatCurrency(metrics.netProfit));
-    set('kpi-margin', metrics.profitMargin + '%');
-    set('kpi-roi', metrics.roi + '%');
-    set('kpi-efficiency', metrics.efficiency + '%');
+    
+    // Better handling for 0/NaN cases
+    set('kpi-margin', metrics.totalIncome > 0 ? metrics.profitMargin + '%' : '-');
+    set('kpi-roi', metrics.totalExpense > 0 ? metrics.roi + '%' : '-');
+    set('kpi-efficiency', metrics.totalIncome > 0 ? metrics.efficiency + '%' : '-');
     
     const netEl = document.getElementById('kpi-net');
     if(netEl) {
@@ -436,18 +328,21 @@ function updateMonthlyBreakdown(monthlyStats) {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    const months = Object.keys(monthlyStats).sort((a, b) => {
-        return monthlyStats[b].rawDate - monthlyStats[a].rawDate;
-    });
+    const keys = Object.keys(monthlyStats).sort().reverse();
     
-    months.forEach(month => {
-        const stats = monthlyStats[month];
+    // Only show months that actually have data (ignore the 0-filled ones for the table to keep it clean)
+    const activeKeys = keys.filter(k => 
+        monthlyStats[k].income !== 0 || monthlyStats[k].expense !== 0 || monthlyStats[k].household !== 0
+    );
+    
+    activeKeys.forEach(key => {
+        const stats = monthlyStats[key];
         const row = document.createElement('tr');
-        row.className = 'border-b border-slate-50 hover:bg-slate-50 transition-colors';
+        row.className = 'border-b border-slate-50 hover:bg-slate-50 transition-colors group';
         row.innerHTML = `
-            <td class="p-3 font-medium text-slate-800 text-xs">${month}</td>
-            <td class="p-3 text-right font-medium text-emerald-600 text-xs">₹${Math.round(stats.income).toLocaleString('en-IN')}</td>
-            <td class="p-3 text-right font-medium text-red-600 text-xs">₹${Math.round(stats.expense + stats.household).toLocaleString('en-IN')}</td>
+            <td class="p-3 font-medium text-slate-800 text-xs">${stats.label}</td>
+            <td class="p-3 text-right font-medium text-emerald-600 text-xs opacity-75 group-hover:opacity-100">₹${Math.round(stats.income).toLocaleString('en-IN')}</td>
+            <td class="p-3 text-right font-medium text-red-600 text-xs opacity-75 group-hover:opacity-100">₹${Math.round(stats.expense + stats.household).toLocaleString('en-IN')}</td>
             <td class="p-3 text-right font-bold ${stats.profit >= 0 ? 'text-emerald-600' : 'text-red-600'} text-xs">
                 ₹${Math.round(stats.profit).toLocaleString('en-IN')}
             </td>
@@ -455,14 +350,8 @@ function updateMonthlyBreakdown(monthlyStats) {
         tbody.appendChild(row);
     });
     
-    if (months.length === 0) {
+    if (activeKeys.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 text-sm">No data available</td></tr>';
-    }
-}
-
-function updateTrendChart() {
-    if (analyticsData && typeof Chart !== 'undefined') {
-        renderTrendChart('trendChart', analyticsData);
     }
 }
 
@@ -472,7 +361,7 @@ function renderEmptyState() {
         if(el) el.textContent = '--';
     });
     
-    ['trendChart', 'categoryChart', 'seasonalChart'].forEach(id => {
+    ['categoryChart', 'seasonalChart'].forEach(id => {
         const ctx = document.getElementById(id);
         if(ctx && chartInstances[id.replace('Chart', '')]) {
             chartInstances[id.replace('Chart', '')].destroy();
