@@ -1,40 +1,31 @@
 // ============================================================
-// ADVANCED ANALYTICS ENGINE - FIXED VERSION
+// ADVANCED ANALYTICS ENGINE - FIXED FOR HOUSEHOLD/PODDY
 // ============================================================
 
 let chartInstances = {};
 let currentView = 'overall';
 let currentYear = 'all';
 let availableYears = [];
-let analyticsData = {}; // Global store for processed data
+let analyticsData = {}; 
 
 // ============================================================
 // INITIALIZATION
 // ============================================================
 function initAnalytics() {
-    // Safety check for globalData
     if (typeof globalData === 'undefined' || !globalData || globalData.length === 0) {
-        console.warn("Global Data not found or empty.");
-        populateYearSelector([new Date().getFullYear()]);
         renderEmptyState();
         return;
     }
 
-    // Extract unique years from data
     const years = new Set(globalData.map(d => {
         const date = new Date(d.date);
         return isNaN(date.getTime()) ? null : date.getFullYear();
     }).filter(y => y !== null));
     
-    // Always include current year
     years.add(new Date().getFullYear());
-    
-    // Sort descending
     availableYears = Array.from(years).sort((a,b) => b - a);
     
     populateYearSelector(availableYears);
-    
-    // Initial Render
     renderChartsAndAnalytics();
 }
 
@@ -42,7 +33,8 @@ function populateYearSelector(years) {
     const yearSelect = document.getElementById('yearSelect');
     if(!yearSelect) return;
     
-    yearSelect.innerHTML = '<option value="all">All Time</option>';
+    const current = yearSelect.value;
+    yearSelect.innerHTML = '<option value="all">All</option>';
     years.forEach(y => {
         const opt = document.createElement('option');
         opt.value = y.toString();
@@ -50,7 +42,11 @@ function populateYearSelector(years) {
         yearSelect.appendChild(opt);
     });
     
-    yearSelect.value = currentYear;
+    if(years.map(String).includes(current)) {
+        yearSelect.value = current;
+    } else {
+        yearSelect.value = 'all';
+    }
 }
 
 function handleYearChange() {
@@ -64,16 +60,13 @@ function handleYearChange() {
 function updateAnalyticsView(view) {
     currentView = view;
     
-    // Update tab buttons visual state
     const views = ['overall', 'arecanut', 'paddy', 'household'];
     views.forEach(v => {
         const btn = document.getElementById(`btn-${v}`);
         if(btn) {
-            if(v === view) {
-                btn.className = 'flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm transition-all border border-slate-200';
-            } else {
-                btn.className = 'flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500 hover:text-slate-700 transition-all';
-            }
+            btn.className = v === view
+                ? 'px-4 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm whitespace-nowrap transition-all'
+                : 'px-4 py-2 text-[11px] font-bold rounded-md text-slate-500 whitespace-nowrap transition-all';
         }
     });
     
@@ -89,25 +82,15 @@ function renderChartsAndAnalytics() {
         return;
     }
     
-    if(availableYears.length === 0 && globalData.length > 0) {
-        // localized lazy init if needed
-        const years = new Set(globalData.map(d => new Date(d.date).getFullYear()));
-        availableYears = Array.from(years).sort((a,b) => b - a);
-    }
-
-    // FILTER DATA by view and year
     const filteredData = globalData.filter(item => {
-        // 1. Handle View Filtering
+        // FIX: Broad filter for Household data
         if (currentView === 'household') {
-            if (item.type !== 'household') return false;
+            if (item.type !== 'household' && item.farm !== 'household') return false;
         } else if (currentView !== 'overall') {
-            // For 'arecanut' or 'paddy', filter by farm property
             if (item.farm !== currentView) return false;
         }
 
-        // 2. Handle Year Filtering
         if(currentYear === 'all') return true;
-        
         const d = new Date(item.date);
         return !isNaN(d.getTime()) && d.getFullYear().toString() === currentYear.toString();
     });
@@ -117,155 +100,87 @@ function renderChartsAndAnalytics() {
         return;
     }
 
-    // PROCESS DATA & UPDATE GLOBAL STORE
-    // FIX: Assign result to global 'analyticsData' so other functions can access it
     analyticsData = processAdvancedAnalytics(filteredData);
     
-    // UPDATE KPI CARDS
     updateKPICards(analyticsData.metrics);
+    updateMonthlyBreakdown(analyticsData.monthlyStats);
     
-    // RENDER CHARTS
-    // Check if Chart.js is loaded
     if (typeof Chart !== 'undefined') {
         renderTrendChart('trendChart', analyticsData);
         renderCategoryChart('categoryChart', analyticsData);
         renderSeasonalChart('seasonalChart', analyticsData);
-        renderForecastChart('forecastChart', analyticsData);
-    } else {
-        console.error("Chart.js library is not loaded.");
     }
-    
-    // Update monthly breakdown table
-    updateMonthlyBreakdown(analyticsData.monthlyStats);
 }
 
 // ============================================================
-// DATA PROCESSING
+// DATA PROCESSING ENGINE
 // ============================================================
 function processAdvancedAnalytics(data) {
     const result = {
         monthlyStats: {},
         categoryMap: {},
         seasonalPatterns: {},
-        forecastData: {},
-        metrics: {},
-        farmBreakdown: {}
+        metrics: {}
     };
 
     let totalIncome = 0;
     let totalExpense = 0;
     let totalHousehold = 0;
-    
-    // Initialize farm breakdown structure
-    result.farmBreakdown = {
-        arecanut: { income: 0, expense: 0 },
-        paddy: { income: 0, expense: 0 },
-        household: { income: 0, expense: 0 },
-        other: { income: 0, expense: 0 }
-    };
 
     data.forEach(item => {
         const date = new Date(item.date);
         if (isNaN(date.getTime())) return;
 
-        // Create a sortable key (YYYY-MM) and a display key
         const monthKey = date.toLocaleString('default', { month: 'short', year: '2-digit' });
         
         if (!result.monthlyStats[monthKey]) {
             result.monthlyStats[monthKey] = { 
-                income: 0, 
-                expense: 0, 
-                household: 0,
-                profit: 0,
-                transactions: 0,
-                rawDate: date // Store one date instance for sorting later
+                income: 0, expense: 0, household: 0, profit: 0, rawDate: date 
             };
         }
 
-        // Determine farm type safely
-        const farmType = item.type === 'household' ? 'household' : (item.farm || 'other');
-        
-        // Ensure the farm type exists in our breakdown (handle unexpected types)
-        if (!result.farmBreakdown[farmType]) {
-            result.farmBreakdown[farmType] = { income: 0, expense: 0 };
-        }
+        const amount = item.amount || 0;
 
         if (item.type === 'income') {
-            result.monthlyStats[monthKey].income += item.amount;
-            totalIncome += item.amount;
-            result.farmBreakdown[farmType].income += item.amount;
-        } else if (item.type === 'expense') {
-            result.monthlyStats[monthKey].expense += item.amount;
-            totalExpense += item.amount;
-            result.farmBreakdown[farmType].expense += item.amount;
+            result.monthlyStats[monthKey].income += amount;
+            totalIncome += amount;
             
-            // Category analysis (only for expenses)
-            const category = item.category || 'Uncategorized';
-            result.categoryMap[category] = (result.categoryMap[category] || 0) + item.amount;
-        } else if (item.type === 'household') {
-            result.monthlyStats[monthKey].household += item.amount;
-            totalHousehold += item.amount;
-            result.farmBreakdown.household.expense += item.amount;
+            const season = getSeason(date.getMonth());
+            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
+            result.seasonalPatterns[season].income += amount;
+
+        } else if (item.type === 'expense') {
+            result.monthlyStats[monthKey].expense += amount;
+            totalExpense += amount;
+            
+            const cat = item.category || 'Uncategorized';
+            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
+            
+            const season = getSeason(date.getMonth());
+            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
+            result.seasonalPatterns[season].expense += amount;
+
+        } else if (item.type === 'household' || item.farm === 'household') {
+            result.monthlyStats[monthKey].household += amount;
+            totalHousehold += amount;
+            
+            // FIX: Add Household to Category Map so Pie Chart works
+            const cat = item.category || 'General';
+            result.categoryMap[cat] = (result.categoryMap[cat] || 0) + amount;
+            
+            const season = getSeason(date.getMonth());
+            if(!result.seasonalPatterns[season]) result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
+            result.seasonalPatterns[season].household += amount;
         }
 
-        // Net calculation for the month
         result.monthlyStats[monthKey].profit = 
             result.monthlyStats[monthKey].income - result.monthlyStats[monthKey].expense - result.monthlyStats[monthKey].household;
-        result.monthlyStats[monthKey].transactions++;
-
-        // Seasonal patterns
-        const season = getSeason(date.getMonth());
-        if (!result.seasonalPatterns[season]) {
-            result.seasonalPatterns[season] = { income: 0, expense: 0, household: 0 };
-        }
-        
-        if (item.type === 'income') {
-            result.seasonalPatterns[season].income += item.amount;
-        } else if (item.type === 'expense') {
-            result.seasonalPatterns[season].expense += item.amount;
-        } else {
-            result.seasonalPatterns[season].household += item.amount;
-        }
     });
 
-    // Calculate advanced metrics
     const netProfit = totalIncome - totalExpense - totalHousehold;
     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome * 100) : 0;
-    
-    // ROI calculation (Investment = Total Expenses)
-    const totalInvestment = totalExpense + totalHousehold; // Including household in investment base for total ROI
-    const roi = totalInvestment > 0 ? (netProfit / totalInvestment * 100) : 0;
-    
-    // Efficiency calculation (Farm only)
+    const roi = (totalExpense + totalHousehold) > 0 ? (netProfit / (totalExpense + totalHousehold) * 100) : 0;
     const efficiency = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0;
-    
-    // Find peak month
-    let peakMonth = { name: '---', value: 0 };
-    Object.entries(result.monthlyStats).forEach(([month, stats]) => {
-        if (stats.income > peakMonth.value) {
-            peakMonth = { name: month, value: stats.income };
-        }
-    });
-
-    // Calculate growth rate (comparing last 2 available months)
-    let growthRate = 0;
-    const months = Object.keys(result.monthlyStats); // These are keys, order is not guaranteed yet
-    // We need to sort months chronologically to calculate growth correctly
-    const sortedMonths = months.sort((a, b) => {
-        const dateA = result.monthlyStats[a].rawDate;
-        const dateB = result.monthlyStats[b].rawDate;
-        return dateA - dateB;
-    });
-
-    if (sortedMonths.length >= 2) {
-        const recentMonths = sortedMonths.slice(-2);
-        const recentIncome1 = result.monthlyStats[recentMonths[0]].income; // Previous
-        const recentIncome2 = result.monthlyStats[recentMonths[1]].income; // Current
-        growthRate = recentIncome1 > 0 ? ((recentIncome2 - recentIncome1) / recentIncome1 * 100) : 0;
-    }
-
-    // Calculate forecasting
-    result.forecastData = calculateForecast(result.monthlyStats, sortedMonths);
 
     result.metrics = {
         totalIncome,
@@ -274,13 +189,7 @@ function processAdvancedAnalytics(data) {
         netProfit,
         profitMargin: profitMargin.toFixed(1),
         roi: roi.toFixed(1),
-        efficiency: efficiency.toFixed(1),
-        growthRate: growthRate.toFixed(1),
-        peakMonth: peakMonth.name,
-        avgMonthlyIncome: totalIncome / Math.max(1, months.length),
-        farmBreakdown: result.farmBreakdown,
-        costEfficiency: totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0,
-        yieldRatio: totalExpense > 0 ? (totalIncome / totalExpense) : 0
+        efficiency: efficiency.toFixed(1)
     };
 
     return result;
@@ -293,46 +202,8 @@ function getSeason(month) {
     return 'Winter';
 }
 
-function calculateForecast(monthlyStats, sortedMonthKeys) {
-    const incomeData = sortedMonthKeys.map(m => monthlyStats[m].income);
-    
-    if (incomeData.length < 2) {
-        return {
-            nextMonths: ['Next Month'],
-            forecastValues: [incomeData.length > 0 ? incomeData[0] : 0]
-        };
-    }
-    
-    // Simple linear regression for forecasting
-    const n = incomeData.length;
-    const x = Array.from({ length: n }, (_, i) => i);
-    const y = incomeData;
-    
-    const sumX = x.reduce((a, b) => a + b, 0);
-    const sumY = y.reduce((a, b) => a + b, 0);
-    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
-    
-    const denominator = (n * sumX2 - sumX * sumX);
-    if (denominator === 0) return { nextMonths: [], forecastValues: [] };
-
-    const slope = (n * sumXY - sumX * sumY) / denominator;
-    const intercept = (sumY - slope * sumX) / n;
-    
-    // Forecast next 3 months
-    const forecast = [];
-    for (let i = 0; i < 3; i++) {
-        forecast.push(intercept + slope * (n + i));
-    }
-    
-    return {
-        nextMonths: ['Next Month', 'Month+2', 'Month+3'],
-        forecastValues: forecast.map(v => Math.max(0, v)) // Prevent negative income forecast
-    };
-}
-
 // ============================================================
-// CHART RENDERING FUNCTIONS
+// CHART RENDERING
 // ============================================================
 function renderTrendChart(canvasId, data) {
     const ctx = document.getElementById(canvasId);
@@ -340,7 +211,6 @@ function renderTrendChart(canvasId, data) {
     
     if (chartInstances.trend) chartInstances.trend.destroy();
     
-    // Ensure we sort months chronologically for the chart
     const months = Object.keys(data.monthlyStats).sort((a, b) => {
         return data.monthlyStats[a].rawDate - data.monthlyStats[b].rawDate;
     });
@@ -353,36 +223,78 @@ function renderTrendChart(canvasId, data) {
     const trendType = document.getElementById('trendType')?.value || 'income_expense';
     
     let datasets = [];
+    
     if (trendType === 'income_expense') {
-        datasets = [
-            {
-                label: 'Income',
-                data: incomeData,
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderColor: 'rgb(16, 185, 129)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: 'Expense',
-                data: expenseData,
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                borderColor: 'rgb(239, 68, 68)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: 'Household',
+        if (currentView === 'household') {
+            // FIX: Only show Household line for Home View
+            datasets = [{
+                label: 'Household Spend',
                 data: householdData,
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 borderColor: 'rgb(59, 130, 246)',
                 borderWidth: 2,
+                pointRadius: 4, // Bigger dots for visibility
                 fill: true,
                 tension: 0.3
-            }
-        ];
+            }];
+        } else if (currentView === 'overall') {
+            datasets = [
+                {
+                    label: 'Income',
+                    data: incomeData,
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Expense',
+                    data: expenseData,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Household',
+                    data: householdData,
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    borderDash: [5, 5],
+                    tension: 0.3,
+                    fill: false
+                }
+            ];
+        } else {
+            // FIX: Hide Household for Farm Views (Paddy/Areca)
+            datasets = [
+                {
+                    label: 'Income',
+                    data: incomeData,
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Expense',
+                    data: expenseData,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.3,
+                    fill: true
+                }
+            ];
+        }
     } else if (trendType === 'profit') {
         datasets = [{
             label: 'Net Profit',
@@ -390,23 +302,20 @@ function renderTrendChart(canvasId, data) {
             backgroundColor: 'rgba(139, 92, 246, 0.2)',
             borderColor: 'rgb(139, 92, 246)',
             borderWidth: 2,
+            pointRadius: 4,
             fill: true,
             tension: 0.3
         }];
     } else {
-        // Cumulative
         let cumulative = 0;
-        const cumulativeData = profitData.map(p => {
-            cumulative += p;
-            return cumulative;
-        });
-        
+        const cumulativeData = profitData.map(p => { cumulative += p; return cumulative; });
         datasets = [{
-            label: 'Cumulative Profit',
+            label: 'Cumulative',
             data: cumulativeData,
             backgroundColor: 'rgba(245, 158, 11, 0.2)',
             borderColor: 'rgb(245, 158, 11)',
             borderWidth: 2,
+            pointRadius: 4,
             fill: true,
             tension: 0.3
         }];
@@ -414,36 +323,15 @@ function renderTrendChart(canvasId, data) {
     
     chartInstances.trend = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: months,
-            datasets: datasets
-        },
+        data: { labels: months, datasets: datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) label += ': ';
-                            return label + '₹' + context.parsed.y.toLocaleString('en-IN');
-                        }
-                    }
-                }
-            },
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: value => '₹' + value.toLocaleString('en-IN')
-                    }
-                }
+                y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) } },
+                x: { ticks: { font: { size: 9 } } }
             }
         }
     });
@@ -457,12 +345,14 @@ function renderCategoryChart(canvasId, data) {
     
     const categories = Object.entries(data.categoryMap)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 8); // Top 8 categories
+        .slice(0, 8); 
     
     if (categories.length === 0) {
-        // Render simple placeholder if no expenses
-        const ctx2d = ctx.getContext('2d');
-        ctx2d.clearRect(0, 0, ctx.width, ctx.height);
+        chartInstances.category = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: ['No Data'], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'], borderWidth: 0 }] },
+            options: { plugins: { tooltip: { enabled: false }, legend: { display: false } }, cutout: '70%' }
+        });
         return;
     }
     
@@ -483,12 +373,7 @@ function renderCategoryChart(canvasId, data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { boxWidth: 10, font: { size: 10 } }
-                }
-            }
+            plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }
         }
     });
 }
@@ -502,262 +387,98 @@ function renderSeasonalChart(canvasId, data) {
     const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
     const incomeData = seasons.map(s => data.seasonalPatterns[s]?.income || 0);
     const expenseData = seasons.map(s => data.seasonalPatterns[s]?.expense || 0);
+    const householdData = seasons.map(s => data.seasonalPatterns[s]?.household || 0);
+    
+    let datasets = [];
+    if(currentView === 'household') {
+         datasets = [{ label: 'Household', data: householdData, backgroundColor: '#3b82f6', borderRadius: 4 }];
+    } else {
+         datasets = [
+            { label: 'Income', data: incomeData, backgroundColor: '#10b981', borderRadius: 4 },
+            { label: 'Expense', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
+         ];
+    }
     
     chartInstances.seasonal = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels: seasons,
-            datasets: [
-                {
-                    label: 'Income',
-                    data: incomeData,
-                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                    borderRadius: 4
-                },
-                {
-                    label: 'Expense',
-                    data: expenseData,
-                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                    borderRadius: 4
-                }
-            ]
-        },
+        data: { labels: seasons, datasets: datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) }
-                }
-            }
-        }
-    });
-}
-
-function renderForecastChart(canvasId, data) {
-    const ctx = document.getElementById(canvasId);
-    if (!ctx) return;
-    
-    if (chartInstances.forecast) chartInstances.forecast.destroy();
-    
-    // Sort month keys correctly using the stored rawDate
-    const months = Object.keys(data.monthlyStats).sort((a, b) => {
-        return data.monthlyStats[a].rawDate - data.monthlyStats[b].rawDate;
-    });
-
-    const last6Months = months.slice(-6);
-    const historicalData = last6Months.map(m => data.monthlyStats[m].income);
-    
-    chartInstances.forecast = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [...last6Months, ...data.forecastData.nextMonths],
-            datasets: [
-                {
-                    label: 'Actual Income',
-                    data: [...historicalData, ...Array(data.forecastData.forecastValues.length).fill(null)],
-                    borderColor: 'rgb(59, 130, 246)',
-                    borderWidth: 2,
-                    tension: 0.3
-                },
-                {
-                    label: 'Forecast',
-                    data: [...Array(historicalData.length).fill(null), ...data.forecastData.forecastValues],
-                    borderColor: 'rgb(139, 92, 246)',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) }
-                }
+            scales: { 
+                y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: v => '₹' + v.toLocaleString('en-IN', {notation: "compact"}) } },
+                x: { ticks: { font: { size: 9 } } }
             }
         }
     });
 }
 
 // ============================================================
-// UI UPDATE FUNCTIONS
+// UI UPDATES
 // ============================================================
 function updateKPICards(metrics) {
     const formatCurrency = (value) => '₹' + Math.round(value).toLocaleString('en-IN');
-    
-    // Helper to safely set text content
-    const set = (id, val) => {
-        const el = document.getElementById(id);
-        if(el) el.textContent = val;
-    };
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
 
     set('kpi-net', formatCurrency(metrics.netProfit));
     set('kpi-margin', metrics.profitMargin + '%');
     set('kpi-roi', metrics.roi + '%');
     set('kpi-efficiency', metrics.efficiency + '%');
     
-    set('kpi-avg-monthly', formatCurrency(metrics.avgMonthlyIncome));
-    set('kpi-peak-month', metrics.peakMonth);
-    set('kpi-growth-rate', metrics.growthRate + '%');
-    set('kpi-cost-efficiency', Math.round(metrics.costEfficiency) + '%');
-    set('kpi-yield-ratio', metrics.yieldRatio.toFixed(1) + 'x');
-    
-    // Color coding
-    colorCodeElement('kpi-net', metrics.netProfit);
-    colorCodeElement('kpi-margin', parseFloat(metrics.profitMargin));
-    colorCodeElement('kpi-roi', parseFloat(metrics.roi));
-    colorCodeElement('kpi-growth-rate', parseFloat(metrics.growthRate));
-
-    // Update Progress Bars
-    updateProgressBar('cost-efficiency-bar', metrics.costEfficiency, 100);
-    updateProgressBar('yield-ratio-bar', metrics.yieldRatio * 20, 100); // Scale yield for bar
-    
-    // Risk Level Calculation
-    const margin = parseFloat(metrics.profitMargin);
-    let riskLevel = 'Low';
-    let riskClass = 'bg-emerald-500';
-    let riskWidth = '25%';
-
-    if (margin < 10) {
-        riskLevel = 'High';
-        riskClass = 'bg-red-500';
-        riskWidth = '90%';
-    } else if (margin < 25) {
-        riskLevel = 'Medium';
-        riskClass = 'bg-amber-500';
-        riskWidth = '60%';
+    const netEl = document.getElementById('kpi-net');
+    if(netEl) {
+        netEl.className = metrics.netProfit >= 0 ? "text-2xl font-bold text-slate-900 truncate" : "text-2xl font-bold text-red-600 truncate";
     }
-    
-    set('kpi-risk-level', riskLevel);
-    const riskBar = document.getElementById('risk-level-bar');
-    if (riskBar) {
-        riskBar.style.width = riskWidth;
-        riskBar.className = `h-full rounded-full ${riskClass}`;
-    }
-}
-
-function updateProgressBar(id, value, max) {
-    const bar = document.getElementById(id);
-    if (!bar) return;
-    
-    const percentage = Math.min(100, Math.max(0, value));
-    bar.style.width = percentage + '%';
-    
-    if (percentage > 66) bar.className = 'h-full rounded-full bg-emerald-500';
-    else if (percentage > 33) bar.className = 'h-full rounded-full bg-amber-500';
-    else bar.className = 'h-full rounded-full bg-red-500';
-}
-
-function colorCodeElement(elementId, value) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-    
-    // Reset colors
-    element.classList.remove('text-emerald-600', 'text-red-600', 'text-slate-900');
-    
-    if (value > 0) element.classList.add('text-emerald-600');
-    else if (value < 0) element.classList.add('text-red-600');
-    else element.classList.add('text-slate-900');
 }
 
 function updateMonthlyBreakdown(monthlyStats) {
     const tbody = document.getElementById('monthlyBreakdown');
     if (!tbody) return;
-    
     tbody.innerHTML = '';
     
-    // Sort months strictly by date (Newest first)
     const months = Object.keys(monthlyStats).sort((a, b) => {
         return monthlyStats[b].rawDate - monthlyStats[a].rawDate;
     });
     
     months.forEach(month => {
         const stats = monthlyStats[month];
-        const margin = stats.income > 0 ? 
-            ((stats.income - stats.expense - stats.household) / stats.income * 100) : 0;
-        
         const row = document.createElement('tr');
-        row.className = 'border-t border-slate-100 hover:bg-slate-50 transition-colors';
+        row.className = 'border-b border-slate-50 hover:bg-slate-50 transition-colors';
         row.innerHTML = `
             <td class="p-3 font-medium text-slate-800 text-xs">${month}</td>
             <td class="p-3 text-right font-medium text-emerald-600 text-xs">₹${Math.round(stats.income).toLocaleString('en-IN')}</td>
-            <td class="p-3 text-right font-medium text-red-600 text-xs">₹${Math.round(stats.expense).toLocaleString('en-IN')}</td>
+            <td class="p-3 text-right font-medium text-red-600 text-xs">₹${Math.round(stats.expense + stats.household).toLocaleString('en-IN')}</td>
             <td class="p-3 text-right font-bold ${stats.profit >= 0 ? 'text-emerald-600' : 'text-red-600'} text-xs">
                 ₹${Math.round(stats.profit).toLocaleString('en-IN')}
-            </td>
-            <td class="p-3 text-right font-medium ${margin >= 0 ? 'text-emerald-600' : 'text-red-600'} text-xs">
-                ${margin.toFixed(1)}%
             </td>
         `;
         tbody.appendChild(row);
     });
     
     if (months.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="p-8 text-center text-slate-400 text-sm">
-                    No monthly data available
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 text-sm">No data available</td></tr>';
     }
 }
 
-// Triggered by the HTML Dropdown
 function updateTrendChart() {
     if (analyticsData && typeof Chart !== 'undefined') {
         renderTrendChart('trendChart', analyticsData);
     }
 }
 
-// ============================================================
-// UTILITY FUNCTIONS
-// ============================================================
 function renderEmptyState() {
-    // Reset KPIs to empty state
-    const kpis = ['kpi-net', 'kpi-margin', 'kpi-roi', 'kpi-efficiency', 
-                  'kpi-avg-monthly', 'kpi-peak-month', 'kpi-growth-rate', 
-                  'kpi-cost-efficiency', 'kpi-yield-ratio'];
-    
-    kpis.forEach(id => {
+    ['kpi-net', 'kpi-margin', 'kpi-roi', 'kpi-efficiency'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.textContent = '--';
     });
     
-    // Reset Risk
-    const riskEl = document.getElementById('kpi-risk-level');
-    if(riskEl) riskEl.textContent = 'Low';
-    
-    // Zero out bars
-    ['cost-efficiency-bar', 'yield-ratio-bar', 'risk-level-bar'].forEach(id => {
-        const bar = document.getElementById(id);
-        if (bar) bar.style.width = '0%';
-    });
-    
-    // Clear Canvas
-    const chartIds = ['trendChart', 'categoryChart', 'seasonalChart', 'forecastChart'];
-    chartIds.forEach(id => {
-        if (chartInstances[id.replace('Chart', '')]) {
+    ['trendChart', 'categoryChart', 'seasonalChart'].forEach(id => {
+        const ctx = document.getElementById(id);
+        if(ctx && chartInstances[id.replace('Chart', '')]) {
             chartInstances[id.replace('Chart', '')].destroy();
-        }
-        const canvas = document.getElementById(id);
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '14px sans-serif';
-            ctx.fillStyle = '#94a3b8';
-            ctx.textAlign = 'center';
-            ctx.fillText('No data available', canvas.width/2, canvas.height/2);
         }
     });
 
     const tbody = document.getElementById('monthlyBreakdown');
-    if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No data available</td></tr>';
-    }
+    if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No data available</td></tr>';
 }

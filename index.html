@@ -225,148 +225,84 @@
       </div>
     </section>
 
-    <!-- Replace the analytics section with this enhanced version -->
-<section id="analytics" class="tab-content hidden space-y-6">
-<div class="flex gap-3 mb-4">
-    <div class="flex bg-slate-100 p-1 rounded-lg flex-1 border border-slate-200">
-        <button onclick="updateAnalyticsView('overall')" id="btn-overall" class="flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm">Overall</button>
-        <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Arecanut</button>
-        <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Paddy</button>
-        <button onclick="updateAnalyticsView('household')" id="btn-household" class="flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500">Household</button>
-    </div>
-    <select id="yearSelect" onchange="handleYearChange()" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-3 outline-none focus:border-slate-400">
-        <option value="all">All Time</option>
-    </select>
-</div>
-
-    <!-- Enhanced KPI Cards Grid -->
-    <div class="grid grid-cols-2 gap-3">
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Net Profit</p>
-            <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-net">₹0</h3>
-            <p class="text-[9px] text-slate-500 mt-1" id="kpi-net-change">+0% vs prev</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Profit Margin</p>
-            <h3 class="text-xl font-bold text-emerald-600 truncate" id="kpi-margin">0%</h3>
-            <p class="text-[9px] text-slate-500 mt-1">Target: 25%</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">ROI</p>
-            <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-roi">0%</h3>
-            <p class="text-[9px] text-slate-500 mt-1">Return on Investment</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Efficiency</p>
-            <h3 class="text-lg font-bold text-slate-900 truncate" id="kpi-efficiency">0%</h3>
-            <p class="text-[9px] text-slate-500 mt-1">Cost to Income Ratio</p>
-        </div>
-    </div>
-
-    <!-- Advanced Metrics Section -->
-    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <h4 class="text-xs font-bold text-slate-800 mb-3">Performance Metrics</h4>
-        <div class="grid grid-cols-3 gap-2">
-            <div class="text-center">
-                <p class="text-[10px] text-slate-400 font-medium">Avg Monthly</p>
-                <p class="text-sm font-bold text-slate-900" id="kpi-avg-monthly">₹0</p>
+    <section id="analytics" class="tab-content hidden space-y-6">
+        
+        <div class="flex gap-3 items-center">
+            <div class="flex-1 overflow-x-auto no-scrollbar">
+                <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200 min-w-max">
+                    <button onclick="updateAnalyticsView('overall')" id="btn-overall" class="px-4 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm whitespace-nowrap">Overall</button>
+                    <button onclick="updateAnalyticsView('arecanut')" id="btn-arecanut" class="px-4 py-2 text-[11px] font-bold rounded-md text-slate-500 whitespace-nowrap">Arecanut</button>
+                    <button onclick="updateAnalyticsView('paddy')" id="btn-paddy" class="px-4 py-2 text-[11px] font-bold rounded-md text-slate-500 whitespace-nowrap">Paddy</button>
+                    <button onclick="updateAnalyticsView('household')" id="btn-household" class="px-4 py-2 text-[11px] font-bold rounded-md text-slate-500 whitespace-nowrap">Home</button>
+                </div>
             </div>
-            <div class="text-center border-x border-slate-100">
-                <p class="text-[10px] text-slate-400 font-medium">Peak Month</p>
-                <p class="text-sm font-bold text-slate-900" id="kpi-peak-month">---</p>
+            <select id="yearSelect" onchange="handleYearChange()" class="shrink-0 bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-lg px-2 py-2.5 outline-none focus:border-slate-400 shadow-sm">
+                <option value="all">All</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Net Profit</p>
+                <h3 class="text-2xl font-bold text-slate-900 truncate" id="kpi-net">₹0</h3>
             </div>
-            <div class="text-center">
-                <p class="text-[10px] text-slate-400 font-medium">Growth Rate</p>
-                <p class="text-sm font-bold text-slate-900" id="kpi-growth-rate">0%</p>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Margin</p>
+                <h3 class="text-2xl font-bold text-emerald-600 truncate" id="kpi-margin">0%</h3>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">ROI</p>
+                <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-roi">0%</h3>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">Efficiency</p>
+                <h3 class="text-xl font-bold text-slate-900 truncate" id="kpi-efficiency">0%</h3>
             </div>
         </div>
-    </div>
 
-    <!-- Multi-Chart Grid -->
-    <div class="grid grid-cols-1 gap-4">
         <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
             <div class="flex justify-between items-center mb-4">
-                <h4 class="text-xs font-bold text-slate-800">Monthly Trend Analysis</h4>
-                <select id="trendType" onchange="updateTrendChart()" class="text-xs border border-slate-200 rounded px-2 py-1">
-                    <option value="income_expense">Income vs Expense</option>
+                <h4 class="text-xs font-bold text-slate-800">Financial Trend</h4>
+                <select id="trendType" onchange="updateTrendChart()" class="text-[10px] border border-slate-200 rounded px-2 py-1 bg-slate-50">
+                    <option value="income_expense">Inc vs Exp</option>
                     <option value="profit">Net Profit</option>
                     <option value="cumulative">Cumulative</option>
                 </select>
             </div>
-            <div class="h-64 relative w-full bg-white"><canvas id="trendChart"></canvas></div>
+            <div class="h-60 relative w-full"><canvas id="trendChart"></canvas></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
-                <h4 class="text-xs font-bold text-slate-800 mb-3">Expense Distribution</h4>
+                <h4 class="text-xs font-bold text-slate-800 mb-3">Expenses by Category</h4>
                 <div class="h-48 relative w-full"><canvas id="categoryChart"></canvas></div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
-                <h4 class="text-xs font-bold text-slate-800 mb-3">Seasonal Analysis</h4>
+                <h4 class="text-xs font-bold text-slate-800 mb-3">Seasonality</h4>
                 <div class="h-48 relative w-full"><canvas id="seasonalChart"></canvas></div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-subtle">
-            <h4 class="text-xs font-bold text-slate-800 mb-4">Forecast & Projections</h4>
-            <div class="h-64 relative w-full bg-white"><canvas id="forecastChart"></canvas></div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-subtle">
-            <h4 class="text-xs font-bold text-slate-800 mb-3">Key Performance Indicators</h4>
-            <div class="space-y-3">
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-600">Cost Efficiency</span>
-                        <span class="font-bold" id="kpi-cost-efficiency">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div class="h-full bg-emerald-500 rounded-full" id="cost-efficiency-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-600">Yield per Investment</span>
-                        <span class="font-bold" id="kpi-yield-ratio">0.0x</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-500 rounded-full" id="yield-ratio-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-slate-600">Risk Level</span>
-                        <span class="font-bold" id="kpi-risk-level">Low</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div class="h-full bg-amber-500 rounded-full" id="risk-level-bar" style="width: 30%"></div>
-                    </div>
-                </div>
+        <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                <h4 class="text-xs font-bold text-slate-800">Monthly Breakdown</h4>
+            </div>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 text-slate-500 font-semibold border-b border-slate-100">Month</th>
+                            <th class="p-3 text-right text-slate-500 font-semibold border-b border-slate-100">In</th>
+                            <th class="p-3 text-right text-slate-500 font-semibold border-b border-slate-100">Out</th>
+                            <th class="p-3 text-right text-slate-500 font-semibold border-b border-slate-100">Net</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyBreakdown" class="divide-y divide-slate-100">
+                        </tbody>
+                </table>
             </div>
         </div>
-    </div>
-
-    <!-- Data Table for Detailed Analysis -->
-    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <h4 class="text-xs font-bold text-slate-800 mb-3">Monthly Breakdown</h4>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="text-left p-2 text-slate-500 font-semibold">Month</th>
-                        <th class="text-right p-2 text-slate-500 font-semibold">Income</th>
-                        <th class="text-right p-2 text-slate-500 font-semibold">Expense</th>
-                        <th class="text-right p-2 text-slate-500 font-semibold">Profit</th>
-                        <th class="text-right p-2 text-slate-500 font-semibold">Margin</th>
-                    </tr>
-                </thead>
-                <tbody id="monthlyBreakdown">
-                    <!-- Will be populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
+    </section>
 
     <section id="records" class="tab-content hidden">
       <div class="flex items-center justify-between mb-5">

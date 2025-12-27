@@ -37,7 +37,6 @@ function showTab(id) {
     target.classList.add("animate-fade-in");
   }
 
-  // Update navigation buttons
   document.querySelectorAll(".nav-btn-mobile").forEach(b => {
     const isTarget = b.getAttribute('onclick').includes(id);
     b.classList.toggle("text-emerald-600", isTarget);
@@ -46,8 +45,11 @@ function showTab(id) {
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if(id === 'analytics' && typeof renderChartsAndAnalytics === 'function') {
-    setTimeout(() => renderChartsAndAnalytics(), 150);
+  // Force chart render when opening Analytics
+  if(id === 'analytics') {
+    if(typeof renderChartsAndAnalytics === 'function') {
+      setTimeout(() => renderChartsAndAnalytics(), 50);
+    }
   }
 }
 
@@ -56,7 +58,6 @@ function toggleInputs() {
   const incInputs = document.getElementById("incomeInputs");
   const farmGroup = document.getElementById("farmGroup");
   
-  // Sync radio buttons if triggered programmatically
   const radios = document.getElementsByName('entryTypeSelect');
   radios.forEach(r => { if(r.value === type) r.checked = true; });
   
@@ -124,6 +125,8 @@ async function loadRemoteData() {
     const remoteData = json.table.rows.map((row, index) => {
       const getCell = (i) => (row.c[i] ? (row.c[i].v !== null ? row.c[i].v : '') : '');
       let dateVal = getCell(0);
+      
+      // Fix Date formatting
       if(typeof dateVal === 'string' && dateVal.includes('Date')) {
         const parts = /\d+,\d+,\d+/.exec(dateVal)[0].split(',');
         const d = new Date(parts[0], parts[1], parts[2]);
@@ -132,11 +135,14 @@ async function loadRemoteData() {
         dateVal = d.toISOString().split('T')[0];
       }
 
+      // Safe String Cleaning (Crucial for filtering)
+      const cleanString = (val) => String(val).toLowerCase().trim();
+
       return {
         originalIndex: index, 
         date: dateVal, 
-        type: getCell(1), 
-        farm: getCell(2),
+        type: cleanString(getCell(1)), 
+        farm: cleanString(getCell(2)),
         category: getCell(3), 
         notes: getCell(4), 
         amount: parseFloat(getCell(5)) || 0,
@@ -174,6 +180,7 @@ function processData(data) {
 
   data.forEach(r => {
     const amount = r.amount || 0;
+    
     if (r.type === 'income') {
       totalInc += amount;
       if (r.farm === 'arecanut') areca.inc += amount;
@@ -182,7 +189,7 @@ function processData(data) {
       totalExp += amount;
       if (r.farm === 'arecanut') areca.exp += amount;
       if (r.farm === 'paddy') paddy.exp += amount;
-    } else { 
+    } else if (r.type === 'household' || r.farm === 'household') { 
       household += amount; 
     }
     
@@ -193,14 +200,6 @@ function processData(data) {
       if(r.type === 'income') monthlyData[monthKey] += amount;
     }
   });
-  function triggerAnalyticsUpdate() {
-    const analyticsSection = document.getElementById('analytics');
-    if(analyticsSection && !analyticsSection.classList.contains('hidden')) {
-        // Reset to overall view to show all data
-        currentView = 'overall';
-        updateAnalyticsView('overall');
-    }
-}
 
   const netVal = totalInc - totalExp - household;
   const monthCount = Object.keys(monthlyData).length || 1;
@@ -216,34 +215,28 @@ function processData(data) {
     }
   });
 
-  // Helper for currency formatting
   const toINR = (v) => "₹" + Math.round(v).toLocaleString('en-IN');
   const arecaNet = areca.inc - areca.exp;
   const paddyNet = paddy.inc - paddy.exp;
 
   // --- UI UPDATES ---
-
-  // Main Dashboard Cards
   updateElement("totalIncome", toINR(totalInc));
   updateElement("totalExpense", toINR(totalExp));
   updateElement("householdTotal", toINR(household));
   updateElement("net", toINR(netVal));
   
-  // Header Badge Logic
   const headerNet = document.getElementById("headerNet");
   const headerBadge = document.getElementById("headerBadge");
   if(headerNet && headerBadge) {
     headerNet.textContent = toINR(netVal);
-    if(netVal >= 0) {
-        headerNet.className = "text-sm font-bold text-emerald-700 truncate block";
-        headerBadge.className = "bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50";
-    } else {
-        headerNet.className = "text-sm font-bold text-red-600 truncate block";
-        headerBadge.className = "bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50";
-    }
+    headerNet.className = netVal >= 0 
+      ? "text-sm font-bold text-emerald-700 truncate block"
+      : "text-sm font-bold text-red-600 truncate block";
+    headerBadge.className = netVal >= 0 
+      ? "bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50"
+      : "bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50";
   }
 
-  // Savings Rate Color
   const savingsEl = document.getElementById("savingsRate");
   if(savingsEl) {
       savingsEl.textContent = savingsRate + "%";
@@ -252,7 +245,6 @@ function processData(data) {
         : "text-lg font-bold text-red-600 truncate";
   }
   
-  // Arecanut Card Logic
   updateElement("arecanutNet", toINR(arecaNet));
   updateElement("arecanutIncome", toINR(areca.inc));
   updateElement("arecanutExpense", toINR(areca.exp));
@@ -264,7 +256,6 @@ function processData(data) {
         : "font-mono font-bold text-sm bg-red-50 text-red-600 px-2 py-1 rounded-md border border-red-100/50";
   }
 
-  // Paddy Card Logic
   updateElement("paddyNet", toINR(paddyNet));
   updateElement("paddyIncome", toINR(paddy.inc));
   updateElement("paddyExpense", toINR(paddy.exp));
@@ -276,10 +267,8 @@ function processData(data) {
         : "font-mono font-bold text-sm bg-red-50 text-red-600 px-2 py-1 rounded-md border border-red-100/50";
   }
   
-  // Progress Bars
   if(document.getElementById("arecaBar")) {
     let pAreca = areca.inc > 0 ? ((areca.inc - areca.exp) / areca.inc) * 100 : 0;
-    // Hide bar if negative, or full if positive. 
     pAreca = Math.max(0, Math.min(100, pAreca));
     document.getElementById("arecaBar").style.width = pAreca + "%";
     
@@ -297,8 +286,10 @@ function processData(data) {
   if(typeof initAnalytics === 'function') initAnalytics();
   
   const analyticsSection = document.getElementById('analytics');
-  if(analyticsSection && !analyticsSection.classList.contains('hidden') && typeof renderChartsAndAnalytics === 'function') {
-    renderChartsAndAnalytics();
+  if(analyticsSection && !analyticsSection.classList.contains('hidden')) {
+      if(typeof renderChartsAndAnalytics === 'function') {
+        renderChartsAndAnalytics();
+      }
   }
 
   renderLogsTable();
@@ -314,11 +305,9 @@ function updateLogsView(view) {
   views.forEach(v => {
     const btn = document.getElementById(`log-btn-${v}`);
     if(btn) {
-      if(v === view) {
-        btn.className = "flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm transition-all";
-      } else {
-        btn.className = "flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500 transition-all";
-      }
+      btn.className = v === view
+        ? "flex-1 py-2 text-[11px] font-bold rounded-md bg-white text-slate-900 shadow-sm transition-all"
+        : "flex-1 py-2 text-[11px] font-bold rounded-md text-slate-500 transition-all";
     }
   });
 
@@ -331,7 +320,7 @@ function renderLogsTable() {
   container.innerHTML = "";
 
   const filteredData = globalData.filter(item => {
-    if(currentLogView === 'household') return item.type === 'household';
+    if(currentLogView === 'household') return item.type === 'household' || item.farm === 'household';
     return item.farm === currentLogView;
   });
 
@@ -340,7 +329,7 @@ function renderLogsTable() {
   if(sortedData.length === 0) {
     container.innerHTML = `
       <div class="text-center py-12">
-        <p class="text-slate-400 font-medium text-xs">No records found for this period</p>
+        <p class="text-slate-400 font-medium text-xs">No records found</p>
       </div>
     `;
     return;
@@ -354,10 +343,9 @@ function renderLogsTable() {
     let iconBg = r.type === 'income' ? 'bg-emerald-50' : (r.type === 'expense' ? 'bg-red-50' : 'bg-blue-50');
     let iconColor = r.type === 'income' ? 'text-emerald-500' : (r.type === 'expense' ? 'text-red-500' : 'text-blue-500');
     
-    // SVG Icons
     let iconSvg = '';
     if(r.type === 'income') iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
-    else if(r.type === 'household') iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>';
+    else if(r.type === 'household' || r.farm === 'household') iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>';
     else iconSvg = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>';
 
     const dateObj = new Date(r.date);
@@ -417,7 +405,7 @@ function editEntry(unsortedIndex) {
   document.getElementById("quantity").value = item.quantity || "";
   
   if (item.type !== "household") {
-    document.getElementById("farmType").value = item.farm.toLowerCase();
+    document.getElementById("farmType").value = item.farm;
   }
 
   document.getElementById("editRowIndex").value = item.originalIndex;
